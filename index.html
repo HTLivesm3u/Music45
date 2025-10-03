@@ -13,7 +13,6 @@
   </head>
   <body>
     <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
     <script>
 export default function handler(req, res) {
   const { id } = req.query;
@@ -26,7 +25,7 @@ export default function handler(req, res) {
   }
 
   // Redirect to the manifest.mpd with the provided ID
-  const target = `http://amit-1.allinonereborn.in/tplaydrm360/manifest.mpd?id=${id}`;
+  const target = `https://clarity-tv.vercel.app/`;
   res.writeHead(302, { Location: target });
   res.end();
 }
