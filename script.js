@@ -127,7 +127,7 @@ const footerOpenBanner = document.getElementById('footer-open-banner');
   let qualitySetting = localStorage.getItem('qualitySetting') || 'auto';
 
   // Helpers
-  const FALLBACK_COVER = 'https://music45beta.vercel.app/music/music45.webp';
+  const FALLBACK_COVER = 'LOGO.jpg'; // Local fallback image
   const escapeHtml = s => String(s || '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
   const getTitle = s => decodeHtmlEntities(s?.name || s?.song || s?.title || 'Unknown Title');
   const getArtist = s => {
