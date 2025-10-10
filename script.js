@@ -216,14 +216,32 @@ if (showCoverBtn) {
 
 // Update lyrics display function with compact styling
 function renderSyncedLyrics(lrcText) {
-  const lyricsContainer = document.getElementById('lyrics-container');
-  if (!lyricsContainer) return;
+  clearLyricsDisplay();
+  if (!lrcText) return;
   
-  lyricsContainer.innerHTML = '';
+  if (lyricsContainer) {
+    lyricsContainer.innerHTML = '';
+    parsedLyrics.forEach((l, i) => {
+      const p = document.createElement('p');
+      p.textContent = l.text || '...';
+      p.dataset.time = l.time;
+      p.classList.add('lyrics-line');
+      lyricsContainer.appendChild(p);
+    });
   
-  if (!lrcText) {
-    lyricsContainer.innerHTML = '<p style="font-size:0.5rem; opacity:0.6;">No lyrics available</p>';
-    return;
+  // Add an empty line at the end to ensure full scroll range and no abrupt end gap
+    const emptyLine = document.createElement('p');
+    emptyLine.innerHTML = '&nbsp;'; // Non-breaking space for minimal height
+    emptyLine.classList.add('lyrics-line', 'end-line');
+    emptyLine.style.opacity = '0.3';
+    emptyLine.style.fontSize = '0.8rem';
+    emptyLine.style.height = '1rem'; // Fixed small height to act as buffer
+    lyricsContainer.appendChild(emptyLine);
+
+    
+    } else if (lyricsText) {
+    // For plain text fallback, add \n at end
+    lyricsText.textContent = parsedLyrics.map(p => p.text).join('\n') + '\n';
   }
   
   // Your existing lyrics parsing logic...

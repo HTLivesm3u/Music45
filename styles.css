@@ -682,7 +682,20 @@
       font-weight: 600;
       transform: scale(1.05);
     }
+    /* Style for the end line/buffer in lyrics */
+.lyrics-line.end-line {
+  min-height: 1rem;
+  margin: 1rem 0;
+  opacity: 0.2;
+}
 
+/* Optional style for end indicator */
+.lyrics-line.end-indicator {
+  text-align: center;
+  margin-top: 2rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--background-tertiary);
+}
     .lyrics-content::-webkit-scrollbar {
       display: none;
     }
@@ -764,14 +777,6 @@
       display: none !important;
     }
 
-    @media (max-width: 768px) and (orientation: portrait) {
-    /* Reduce flip/lyrics height more aggressively on small screens */
-  .flip-inner {
-    max-height: calc(50vh - 2rem); /* More generous: 50vh minus some padding/margin buffer */
-    min-height: 30vh; /* Ensure it doesn't collapse too much */
-  }
-    
-    }
     /* Responsive adjustments */
     @media (max-width: 768px) {
       .player-container {
