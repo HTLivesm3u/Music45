@@ -475,6 +475,7 @@
       left: 0;
       right: 0;
       bottom: 0;
+      height: 100vh; /* Ensure full viewport height */
       background: var(--background);
       z-index: 1000;
       padding: 0px;
