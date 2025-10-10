@@ -481,12 +481,16 @@
       padding: 0px;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
+      justify-content: space-between;
+      overflow: hidden; /* Prevent any scroll gaps */
       transition: var(--transition-smooth);
     }
 
     .player-container {
       position: relative;
+      display: flex; /* Add this if not already */
+  flex-direction: column; /* Stack vertically */
+  flex: 1; /* Take full available space */
       width: 100%;
       max-width: 500px;
       height: 100%;
