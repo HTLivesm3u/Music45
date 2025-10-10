@@ -764,6 +764,13 @@
       display: none !important;
     }
 
+    @media (max-width: 768px) and (orientation: portrait) {
+    /* Reduce flip/lyrics height more aggressively on small screens */
+  .flip-inner {
+    max-height: 35vh;
+  }
+    
+    }
     /* Responsive adjustments */
     @media (max-width: 768px) {
       .player-container {
