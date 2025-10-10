@@ -1417,6 +1417,7 @@
 /* Enhanced music banner transitions */
 .music-banner {
     animation: slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    height: 100dvh; /* Use dynamic viewport height for mobile to account for address bar/safe areas */
 }
 
 @keyframes slideUp {
