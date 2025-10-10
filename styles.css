@@ -475,22 +475,17 @@
       left: 0;
       right: 0;
       bottom: 0;
-      height: 100vh; /* Ensure full viewport height */
       background: var(--background);
       z-index: 1000;
       padding: 0px;
       flex-direction: column;
       align-items: center;
-      justify-content: space-between;
-      overflow: hidden; /* Prevent any scroll gaps */
+      justify-content: center;
       transition: var(--transition-smooth);
     }
 
     .player-container {
       position: relative;
-      display: flex; /* Add this if not already */
-  flex-direction: column; /* Stack vertically */
-  flex: 1; /* Take full available space */
       width: 100%;
       max-width: 500px;
       height: 100%;
