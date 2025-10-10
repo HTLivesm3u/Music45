@@ -767,7 +767,8 @@
     @media (max-width: 768px) and (orientation: portrait) {
     /* Reduce flip/lyrics height more aggressively on small screens */
   .flip-inner {
-    max-height: auto;
+    max-height: calc(50vh - 2rem); /* More generous: 50vh minus some padding/margin buffer */
+    min-height: 30vh; /* Ensure it doesn't collapse too much */
   }
     
     }
