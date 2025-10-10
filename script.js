@@ -88,6 +88,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const closeBannerBtn = document.getElementById('close-banner-btn');
   const bannerProgressTrack = document.getElementById('banner-progress-track');
   const bannerProgressFill = document.getElementById('banner-progress-fill');
+  const bannerProgressHandle = document.getElementById('progress-handle-circle');
   const currentTimeEl = document.getElementById('current-time');
   const durationEl = document.getElementById('duration');
   const shufflePopup = document.getElementById('shuffle-popup');
@@ -561,7 +562,8 @@ function renderSyncedLyrics(lrcText) {
     const pct = dur > 0 ? (cur / dur) * 100 : 0;
     if (progressFill) progressFill.style.width = pct + '%';
     if (bannerProgressFill) bannerProgressFill.style.width = pct + '%';
-    if (footerProgressFill) footerProgressFill.style.width = pct + '%'; // Add this line
+    if (bannerProgressHandle) bannerProgressHandle.style.left = pct + '%';
+    if (footerProgressFill) footerProgressFill.style.width = pct + '%';
     if (currentTimeEl) currentTimeEl.textContent = formatTime(cur);
     if (durationEl) durationEl.textContent = formatTime(dur);
 
@@ -587,7 +589,7 @@ function renderSyncedLyrics(lrcText) {
     }
   });
 
-  // Click-to-seek handlers
+  // Click-to-seek handler for the main (non-banner) player
   if (progressTrack) {
     progressTrack.addEventListener('click', e => {
       const rect = progressTrack.getBoundingClientRect();
@@ -596,13 +598,52 @@ function renderSyncedLyrics(lrcText) {
     });
   }
 
-  if (bannerProgressTrack) {
-    bannerProgressTrack.addEventListener('click', e => {
-      const rect = bannerProgressTrack.getBoundingClientRect();
-      const pct = (e.clientX - rect.left) / rect.width;
-      if (isFinite(audio.duration)) audio.currentTime = Math.max(0, Math.min(1, pct)) * audio.duration;
-    });
-  }
+  // Enhanced seeking logic (drag and click) for the music banner progress bar
+  let isSeeking = false;
+
+    function handleSeek(e) {
+        if (!isFinite(audio.duration)) return;
+
+        e.preventDefault();
+
+        const trackRect = bannerProgressTrack.getBoundingClientRect();
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        
+        let percent = (clientX - trackRect.left) / trackRect.width;
+        percent = Math.max(0, Math.min(1, percent));
+
+        const newTime = percent * audio.duration;
+        audio.currentTime = newTime;
+
+        // Immediate UI update for responsiveness
+        const pct = percent * 100;
+        if (bannerProgressFill) bannerProgressFill.style.width = pct + '%';
+        if (bannerProgressHandle) bannerProgressHandle.style.left = pct + '%';
+    }
+
+    function startSeeking(e) {
+        isSeeking = true;
+        handleSeek(e);
+        
+        document.addEventListener('mousemove', handleSeek);
+        document.addEventListener('touchmove', handleSeek, { passive: false });
+        
+        document.addEventListener('mouseup', stopSeeking);
+        document.addEventListener('touchend', stopSeeking);
+    }
+
+    function stopSeeking() {
+        isSeeking = false;
+        document.removeEventListener('mousemove', handleSeek);
+        document.removeEventListener('touchmove', handleSeek);
+        document.removeEventListener('mouseup', stopSeeking);
+        document.removeEventListener('touchend', stopSeeking);
+    }
+
+    if (bannerProgressTrack) {
+        bannerProgressTrack.addEventListener('mousedown', startSeeking);
+        bannerProgressTrack.addEventListener('touchstart', startSeeking, { passive: false });
+    }
 
   audio.addEventListener('play', () => {
     isPlaying = true;
