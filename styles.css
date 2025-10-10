@@ -767,7 +767,7 @@
     @media (max-width: 768px) and (orientation: portrait) {
     /* Reduce flip/lyrics height more aggressively on small screens */
   .flip-inner {
-    max-height: 35vh;
+    max-height: 45vh;
   }
     
     }
