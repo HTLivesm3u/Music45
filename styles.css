@@ -764,6 +764,79 @@
       display: none !important;
     }
 
+
+    /* Mobile-Specific Fixes for Music Banner Gap */
+@media (max-width: 768px) and (orientation: portrait) {
+  .music-banner {
+    height: 100dvh; /* Use dynamic viewport height for mobile to account for address bar/safe areas */
+    padding-bottom: env(safe-area-inset-bottom); /* iOS safe area for bottom */
+  }
+
+  .player-container {
+    height: 100dvh;
+    padding: 1rem;
+    padding-bottom: calc(1rem + env(safe-area-inset-bottom) + 60px); /* Extra for bottom nav (60px height) + safe area */
+    justify-content: space-between;
+  }
+
+  .main-controls {
+    padding: 0.5rem 0 calc(2rem + env(safe-area-inset-bottom)); /* Hug bottom with safe area clearance */
+    gap: 1rem;
+    position: sticky;
+    bottom: 0;
+    background: var(--background); /* Ensure no transparency gap */
+    z-index: 10;
+  }
+
+  .bottom-nav {
+    z-index: 1001; /* Ensure nav stays on top if overlapping */
+  }
+
+  /* Reduce flip/lyrics height more aggressively on small screens */
+  .flip-inner {
+    max-height: 35vh;
+  }
+
+  .lyrics-content {
+    max-height: 25vh;
+    padding: 0 0.5rem;
+    font-size: 0.85rem;
+  }
+
+  #banner-cover-image {
+    width: 220px;
+    height: 220px;
+    max-height: 30vh;
+  }
+
+  /* Ensure no overflow causes gap */
+  .flip-container {
+    max-height: 40vh;
+    overflow: hidden;
+  }
+
+  /* Touch optimizations: Prevent zoom/gap on tap */
+  .play-button:active {
+    transform: scale(0.95);
+  }
+}
+
+/* Landscape mobile adjustments if needed */
+@media (max-width: 768px) and (orientation: landscape) {
+  .flip-inner {
+    max-height: 60vh;
+  }
+
+  .lyrics-content {
+    max-height: 50vh;
+  }
+
+  .main-controls {
+    padding-bottom: calc(1rem + env(safe-area-inset-bottom));
+  }
+}
+
+
     /* Responsive adjustments */
     @media (max-width: 768px) {
       .player-container {
@@ -1417,7 +1490,6 @@
 /* Enhanced music banner transitions */
 .music-banner {
     animation: slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    height: 100dvh; /* Use dynamic viewport height for mobile to account for address bar/safe areas */
 }
 
 @keyframes slideUp {
