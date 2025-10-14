@@ -961,7 +961,7 @@ if (footerOpenBanner) {
 
   
 async function loadMultipleNewReleaseAlbums() {
-  const albumIds = ['56535946', '12345678', '87654321']; // 🟢 Add more album IDs here
+  const albumIds = ['56535946', '1055473']; // 🟢 Add more album IDs here
   const wrap = document.getElementById('new-releases');
   if (!wrap) {
     console.error('new-releases container not found');
