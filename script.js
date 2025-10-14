@@ -960,41 +960,41 @@ if (footerOpenBanner) {
   }
 
   
- async function loadSingleNewReleaseAlbum() {
-  const albumId = '1055473';
-  const apiUrl = `https://music45-api.vercel.app/api/albums?id=${encodeURIComponent(albumId)}`;
-  try {
-    const resp = await fetch(apiUrl);
-    if (!resp.ok) throw new Error('Failed fetch album');
-    const data = await resp.json();
-    const album = data?.data?.[0] || data?.data;
-    if (!album) {
-      console.warn('No album data for new release');
-      return;
-    }
-    const wrap = document.getElementById('new-releases');
-    if (!wrap) {
-      console.error('new-releases container not found');
-      return;
-    }
-    wrap.innerHTML = ''; // clear old
-    const card = document.createElement('div');
-    card.className = 'music-card';
-    const cover = getCover(album);
-    const title = album.name || album.title || 'Unknown Album';
+async function loadMultipleNewReleaseAlbums() {
+  const albumIds = ['56535946', '12345678', '87654321']; // 🟢 Add more album IDs here
+  const wrap = document.getElementById('new-releases');
+  if (!wrap) {
+    console.error('new-releases container not found');
+    return;
+  }
+  wrap.innerHTML = ''; // clear old albums
 
-    card.innerHTML = `
-      <img src="${cover}" alt="${escapeHtml(title)}">
-      <span>${escapeHtml(title)}</span>
-    `;
-    card.addEventListener('click', () => {
-      playAlbum(albumId);
-    });
-    wrap.appendChild(card);
-  } catch (err) {
-    console.error('Error loading new release album:', err);
+  for (const albumId of albumIds) {
+    const apiUrl = `https://music45-api.vercel.app/api/albums?id=${encodeURIComponent(albumId)}`;
+    try {
+      const resp = await fetch(apiUrl);
+      if (!resp.ok) throw new Error(`Failed fetch album: ${albumId}`);
+      const data = await resp.json();
+      const album = data?.data?.[0] || data?.data;
+      if (!album) continue;
+
+      const card = document.createElement('div');
+      card.className = 'music-card';
+      const cover = getCover(album);
+      const title = album.name || album.title || 'Unknown Album';
+
+      card.innerHTML = `
+        <img src="${cover}" alt="${escapeHtml(title)}">
+        <span>${escapeHtml(title)}</span>
+      `;
+      card.addEventListener('click', () => playAlbum(albumId));
+      wrap.appendChild(card);
+    } catch (err) {
+      console.error('Error loading album:', albumId, err);
+    }
   }
 }
+
 
 
   // Search
@@ -1061,5 +1061,5 @@ if (footerOpenBanner) {
   loadRecentlyFromStorage();
   loadAlbums();
   refreshQualityButtons();
-  loadSingleNewReleaseAlbum();
+  loadMultipleNewReleaseAlbums();
 });
