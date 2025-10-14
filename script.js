@@ -961,7 +961,7 @@ if (footerOpenBanner) {
 
   
  async function loadSingleNewReleaseAlbum() {
-  const albumId = ['56535946','1055473'];
+  const albumId = '1055473';
   const apiUrl = `https://music45-api.vercel.app/api/albums?id=${encodeURIComponent(albumId)}`;
   try {
     const resp = await fetch(apiUrl);
