@@ -557,37 +557,42 @@ function renderSyncedLyrics(lrcText) {
 
   // Progress and Time (single consolidated handler; also does lyrics sync)
   audio.addEventListener('timeupdate', () => {
-    const cur = audio.currentTime || 0;
-    const dur = audio.duration || 0;
-    const pct = dur > 0 ? (cur / dur) * 100 : 0;
-    if (progressFill) progressFill.style.width = pct + '%';
-    if (bannerProgressFill) bannerProgressFill.style.width = pct + '%';
-    if (bannerProgressHandle) bannerProgressHandle.style.left = pct + '%';
-    if (footerProgressFill) footerProgressFill.style.width = pct + '%';
-    if (currentTimeEl) currentTimeEl.textContent = formatTime(cur);
-    if (durationEl) durationEl.textContent = formatTime(dur);
+  const cur = audio.currentTime || 0;
+  const dur = audio.duration || 0;
+  const pct = dur > 0 ? (cur / dur) * 100 : 0;
+  if (progressFill) progressFill.style.width = pct + '%';
+  if (bannerProgressFill) bannerProgressFill.style.width = pct + '%';
+  if (bannerProgressHandle) bannerProgressHandle.style.left = pct + '%';
+  if (footerProgressFill) footerProgressFill.style.width = pct + '%';
+  if (currentTimeEl) currentTimeEl.textContent = formatTime(cur);
+  if (durationEl) durationEl.textContent = formatTime(dur);
 
-    // === Lyrics sync ===
-    if (parsedLyrics && parsedLyrics.length && lyricsContainer) {
-      // find current active index
-      let activeIndex = parsedLyrics.findIndex((l, i) =>
-        cur >= l.time && (!parsedLyrics[i + 1] || cur < parsedLyrics[i + 1].time)
-      );
+  // === Lyrics sync ===
+  if (parsedLyrics && parsedLyrics.length && lyricsContainer) {
+    // find current active index
+    let activeIndex = parsedLyrics.findIndex((l, i) =>
+      cur >= l.time && (!parsedLyrics[i + 1] || cur < parsedLyrics[i + 1].time)
+    );
 
-      if (activeIndex >= 0) {
-        // toggle active classes & scroll
-        const children = [...lyricsContainer.children];
-        children.forEach((p, i) => {
-          p.classList.toggle('active-line', i === activeIndex);
-          if (i === activeIndex) {
-            try {
-              p.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            } catch (e) { /* ignore scroll errors on some devices */ }
-          }
-        });
-      }
+    if (activeIndex >= 0) {
+      // Don't focus on the last line
+      const isLastLine = activeIndex === parsedLyrics.length - 1;
+      
+      // toggle active classes
+      const children = [...lyricsContainer.children];
+      children.forEach((p, i) => {
+        p.classList.toggle('active-line', i === activeIndex && !isLastLine);
+        
+        // Only scroll if it's not the last line
+        if (i === activeIndex && !isLastLine) {
+          try {
+            p.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          } catch (e) { /* ignore scroll errors on some devices */ }
+        }
+      });
     }
-  });
+  }
+});
 
   // Click-to-seek handler for the main (non-banner) player
   if (progressTrack) {
