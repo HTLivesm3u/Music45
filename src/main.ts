@@ -360,33 +360,30 @@ async function searchAndQueue(query: string, autoplay = true): Promise<void> {
 
 function clearLyricsDisplay(): void {
   state.parsedLyrics = [];
-  if (elements.lyricsContainer) elements.lyricsContainer.innerHTML = "";
-  if (elements.lyricsText) elements.lyricsText.textContent = "";
+  if (elements.lyricsContainer) {
+    elements.lyricsContainer.innerHTML = "";
+    elements.lyricsContainer.style.display = "block";
+  }
+  if (elements.lyricsText) {
+    elements.lyricsText.textContent = "";
+    elements.lyricsText.style.display = "none";
+  }
 }
 
 function renderSyncedLyrics(lrcText: string): void {
-  clearLyricsDisplay();
-
   if (!lrcText) {
-    if (elements.lyricsContainer) {
-      elements.lyricsContainer.innerHTML =
-        '<p style="font-size:0.9rem; opacity:0.6;">No lyrics available</p>';
-    }
     return;
   }
 
   state.parsedLyrics = parseLrcLyrics(lrcText);
 
   if (state.parsedLyrics.length === 0) {
-    if (elements.lyricsText) {
-      elements.lyricsText.textContent = lrcText;
-    } else if (elements.lyricsContainer) {
-      elements.lyricsContainer.innerHTML = `<p>${escapeHtml(lrcText)}</p>`;
-    }
-    return;
+    return; // Will fall back to plain lyrics
   }
 
+  // Show synced lyrics container, hide plain text
   if (elements.lyricsContainer) {
+    elements.lyricsContainer.style.display = "block";
     elements.lyricsContainer.innerHTML = "";
 
     state.parsedLyrics.forEach((line) => {
@@ -397,9 +394,41 @@ function renderSyncedLyrics(lrcText: string): void {
       elements.lyricsContainer!.appendChild(p);
     });
   }
+
+  if (elements.lyricsText) {
+    elements.lyricsText.style.display = "none";
+  }
+}
+
+function renderPlainLyrics(plainText: string): void {
+  if (!plainText) {
+    return;
+  }
+
+  // Show plain lyrics container, hide synced
+  if (elements.lyricsText) {
+    elements.lyricsText.textContent = plainText;
+    elements.lyricsText.style.display = "block";
+  }
+
+  if (elements.lyricsContainer) {
+    elements.lyricsContainer.style.display = "none";
+  }
+
+  state.parsedLyrics = [];
 }
 
 async function fetchAndDisplayLyrics(item: QueueItem): Promise<void> {
+  // Show loading state immediately
+  if (elements.lyricsContainer) {
+    elements.lyricsContainer.innerHTML =
+      '<p style="font-size:0.9rem; opacity:0.6;">Loading lyrics...</p>';
+    elements.lyricsContainer.style.display = "block";
+  }
+  if (elements.lyricsText) {
+    elements.lyricsText.style.display = "none";
+  }
+
   try {
     const lyricsData = await getLyrics(item.title, item.artist);
 
@@ -413,22 +442,36 @@ async function fetchAndDisplayLyrics(item: QueueItem): Promise<void> {
 
     const bestLyrics = getBestLyrics(lyricsData);
 
-    if (bestLyrics.type === "synced") {
+    if (bestLyrics.type === "synced" && bestLyrics.content) {
+      // Try to render synced lyrics first (fastest)
       renderSyncedLyrics(bestLyrics.content);
-    } else if (bestLyrics.type === "plain") {
-      if (elements.lyricsText) {
-        elements.lyricsText.textContent = bestLyrics.content;
-      } else if (elements.lyricsContainer) {
-        elements.lyricsContainer.innerHTML = `<p>${escapeHtml(bestLyrics.content)}</p>`;
+
+      // If synced lyrics parsing failed, fall back to plain
+      if (state.parsedLyrics.length === 0 && lyricsData.plainLyrics) {
+        renderPlainLyrics(lyricsData.plainLyrics);
+      } else if (state.parsedLyrics.length === 0 && lyricsData.lyrics) {
+        renderPlainLyrics(lyricsData.lyrics);
       }
+    } else if (bestLyrics.type === "plain" && bestLyrics.content) {
+      // Show plain lyrics
+      renderPlainLyrics(bestLyrics.content);
     } else {
+      // No lyrics available
       if (elements.lyricsContainer) {
         elements.lyricsContainer.innerHTML =
           '<p style="font-size:0.9rem; opacity:0.6;">No lyrics available</p>';
+        elements.lyricsContainer.style.display = "block";
+      }
+      if (elements.lyricsText) {
+        elements.lyricsText.style.display = "none";
       }
     }
   } catch (error) {
     console.error("Failed to fetch lyrics:", error);
+    if (elements.lyricsContainer) {
+      elements.lyricsContainer.innerHTML =
+        '<p style="font-size:0.9rem; opacity:0.6;">Failed to load lyrics</p>';
+    }
   }
 }
 
@@ -449,9 +492,17 @@ function syncLyrics(currentTime: number): void {
 
     children.forEach((element, index) => {
       const p = element as HTMLElement;
-      p.classList.toggle("active-line", index === activeIndex && !isLastLine);
+      const isActive = index === activeIndex && !isLastLine;
 
-      if (index === activeIndex && !isLastLine) {
+      // Toggle active class
+      if (isActive) {
+        p.classList.add("active-line");
+      } else {
+        p.classList.remove("active-line");
+      }
+
+      // Scroll to active line
+      if (isActive) {
         try {
           p.scrollIntoView({ behavior: "smooth", block: "center" });
         } catch (error) {
