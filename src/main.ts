@@ -1,5 +1,7 @@
 // ===== Music45 Main Application =====
 
+import { getAppTemplate } from "./templates/app-template";
+
 import type {
   Album,
   QueueItem,
@@ -89,6 +91,14 @@ function refreshIcons(): void {
 }
 
 // ===== DOM Element Initialization =====
+
+function injectAppTemplate(): void {
+  const root = document.getElementById("root");
+  if (root) {
+    root.innerHTML = getAppTemplate();
+    console.log("App template injected");
+  }
+}
 
 function initializeElements(): void {
   elements = {
@@ -1084,6 +1094,9 @@ function loadStoredData(): void {
 
 async function initializeApp(): Promise<void> {
   console.log("Initializing Music45 App...");
+
+  // Inject HTML template
+  injectAppTemplate();
 
   // Set greeting
   setGreeting();
