@@ -1,16 +1,16 @@
 {
-  "name": "Music45",
-  "short_name": "Music45",
-  "description": "Beautiful mobile music streaming app with dark theme and smooth animations",
-  "start_url": "/index.html",
-  "display": "standalone",
-  "background_color": "#000000",
-  "theme_color": "#000000",
-  "icons": [
-    {
-      "src": "public/LOGO.jpg",
-      "sizes": "512x512",
-      "type": "image/png"
-    }
-  ]
+"name": "Music45",
+"short_name": "Music45",
+"description": "Beautiful mobile music streaming app with dark theme and smooth animations",
+"start_url": "/index.html",
+"display": "standalone",
+"background_color": "#000000",
+"theme_color": "#000000",
+"icons": [
+{
+"src": "LOGO.jpg",
+"sizes": "512x512",
+"type": "image/png"
+}
+]
 }
