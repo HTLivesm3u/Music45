@@ -126,6 +126,7 @@ const footerOpenBanner = document.getElementById('footer-open-banner');
   let shuffleMode = false;
   let repeatMode = false;
   let qualitySetting = localStorage.getItem('qualitySetting') || 'auto';
+  let queueSource = 'generic';
 
   // Helpers
   const FALLBACK_COVER = 'LOGO.jpg'; // Local fallback image
@@ -689,7 +690,15 @@ function renderSyncedLyrics(lrcText) {
             currentIndex = 0;
             await playIndex(0);
             return;
+          } else if (queueSource === 'search-single') {
+            isPlaying = false;
+            updateUI(queue[currentIndex], false);
+            return;
           }
+        } else if (queueSource === 'search-single') {
+          isPlaying = false;
+          updateUI(queue[currentIndex], false);
+          return;
         }
       }
       
@@ -1038,16 +1047,10 @@ async function loadMultipleNewReleaseAlbums() {
           </div>
         `;
         div.addEventListener('click', () => {
-          queue = results.map(r2 => ({
-            id: r2.id,
-            title: getTitle(r2),
-            artist: getArtist(r2),
-            cover: getCover(r2),
-            url: null,
-            raw: r2
-          }));
-          currentIndex = i;
-          playIndex(currentIndex);
+          queueSource = 'search-single';
+          queue = [item];
+          currentIndex = 0;
+          playIndex(0);
         });
         if (searchResultsWrap) searchResultsWrap.appendChild(div);
       });
