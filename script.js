@@ -515,6 +515,28 @@ function renderSyncedLyrics(lrcText) {
 
   async function nextSong() {
     if (!queue.length) return;
+    const currentSong = queue[currentIndex];
+    if (queueSource === 'search-single' && queue.length === 1 && currentSong && currentSong.id) {
+      const suggestions = await fetchSongSuggestions(currentSong.id);
+      if (suggestions.length > 0) {
+        const suggestedQueue = suggestions.map(s => ({
+          id: s.id,
+          title: getTitle(s),
+          artist: getArtist(s),
+          cover: getCover(s),
+          url: null,
+          raw: s
+        }));
+        queue = suggestedQueue;
+        currentIndex = 0;
+        await playIndex(0);
+        return;
+      } else {
+        isPlaying = false;
+        updateUI(queue[currentIndex], false);
+        return;
+      }
+    }
     let n;
     if (shuffleMode) {
       n = Math.floor(Math.random() * queue.length);
