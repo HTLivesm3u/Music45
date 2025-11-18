@@ -666,29 +666,26 @@ function renderSyncedLyrics(lrcText) {
       playIndex(currentIndex);
     } else {
       // Check if we're at the end of the current queue
-      if (currentIndex >= queue.length - 1) {
-        // Get current song ID for suggestions
-        const currentSong = queue[currentIndex];
-        if (currentSong && currentSong.id) {
-          // Fetch suggestions based on current song
-          const suggestions = await fetchSongSuggestions(currentSong.id);
+       // At end of queue → fetch suggestions
+        if (currentIndex >= queue.length - 1) {
+            const currentSong = queue[currentIndex];
+            if (currentSong && currentSong.id) {
+                const suggestions = await fetchSongSuggestions(currentSong.id);
           
           if (suggestions.length > 0) {
-            // Convert suggestions to queue format
-            const suggestedQueue = suggestions.map(s => ({
-              id: s.id,
-              title: getTitle(s),
-              artist: getArtist(s),
-              cover: getCover(s),
-              url: null,
-              raw: s
-            }));
+                    queue = suggestions.map(s => ({
+                        id: s.id,
+                        title: getTitle(s),
+                        artist: getArtist(s),
+                        cover: getCover(s),
+                        url: null,
+                        raw: s
+                    }));
             
             // Add suggestions to queue and play the first one
-            queue = suggestedQueue;
             currentIndex = 0;
-            await playIndex(0);
-            return;
+                    await playIndex(0);
+                    return;
           }
         }
       }
@@ -964,6 +961,33 @@ if (footerOpenBanner) {
     });
   }
 
+
+  async function playSingleSong(id) {
+    try {
+        const res = await fetch(`https://music45-api.vercel.app/api/songs?ids=${id}`);
+        const data = await res.json();
+        const s = data?.data?.[0];
+
+        if (!s) return;
+
+        // Create queue with ONLY this 1 song
+        queue = [{
+            id: s.id,
+            title: getTitle(s),
+            artist: getArtist(s),
+            cover: getCover(s),
+            url: extractPlayableUrl(s),
+            raw: s
+        }];
+
+        currentIndex = 0;
+
+        await playIndex(0);  // play normally (banner + footer update)
+    } catch (err) {
+        console.error("Error playSingleSong:", err);
+    }
+}
+
   
 async function loadMultipleNewReleaseAlbums() {
   const albumIds = ['56535946', '1055473']; // 🟢 Add more album IDs here
@@ -1038,6 +1062,7 @@ async function loadMultipleNewReleaseAlbums() {
           </div>
         `;
         div.addEventListener('click', () => {
+          playSingleSong(r.id);
           queue = results.map(r2 => ({
             id: r2.id,
             title: getTitle(r2),
@@ -1058,6 +1083,7 @@ async function loadMultipleNewReleaseAlbums() {
   }
 
   if (searchBtn) searchBtn.addEventListener('click', handleSearch);
+  
   if (searchInput) searchInput.addEventListener('keydown', e => {
     if (e.key === 'Enter') handleSearch();
   });
