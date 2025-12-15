@@ -26,7 +26,7 @@ async function fetchSongSuggestions(songId) {
 async function playSuggestions() {
   const currentSong = queue[currentIndex];
   if (!currentSong || !currentSong.id) return;
-  
+
   const suggestions = await fetchSongSuggestions(currentSong.id);
   if (suggestions.length > 0) {
     const suggestedQueue = suggestions.map(s => ({
@@ -37,7 +37,7 @@ async function playSuggestions() {
       url: null,
       raw: s
     }));
-    
+
     queue = suggestedQueue;
     currentIndex = 0;
     await playIndex(0);
@@ -98,20 +98,20 @@ document.addEventListener('DOMContentLoaded', () => {
   const openBanner = document.getElementById('open-banner');
 
   // Compact Footer refs
-const compactFooter = document.getElementById('compact-footer');
-const footerTrackImage = document.getElementById('footer-track-image');
-const footerTrackTitle = document.getElementById('footer-track-title');
-const footerTrackArtist = document.getElementById('footer-track-artist');
-const footerPlayBtn = document.getElementById('footer-btn-play');
-const footerPlayIcon = document.getElementById('footer-play-icon');
-const footerNextBtn = document.getElementById('footer-btn-next');
-const footerProgressFill = document.getElementById('footer-progress-fill');
-const footerOpenBanner = document.getElementById('footer-open-banner');
+  const compactFooter = document.getElementById('compact-footer');
+  const footerTrackImage = document.getElementById('footer-track-image');
+  const footerTrackTitle = document.getElementById('footer-track-title');
+  const footerTrackArtist = document.getElementById('footer-track-artist');
+  const footerPlayBtn = document.getElementById('footer-btn-play');
+  const footerPlayIcon = document.getElementById('footer-play-icon');
+  const footerNextBtn = document.getElementById('footer-btn-next');
+  const footerProgressFill = document.getElementById('footer-progress-fill');
+  const footerOpenBanner = document.getElementById('footer-open-banner');
 
   // Lyrics DOM (these may not exist if you forgot to add HTML — code handles that)
   const lyricsContainer = document.getElementById('lyrics-container'); // for synced-lines
   const lyricsText = document.getElementById('lyrics-text'); // for plain lyrics or fallback
-  
+
 
   // Log DOM elements for debugging
   console.log('closeBannerBtn:', closeBannerBtn);
@@ -167,70 +167,70 @@ const footerOpenBanner = document.getElementById('footer-open-banner');
   }
 
   function extractPlayableUrl(details, quality = qualitySetting) {
-  if (!details) return null;
-  const dl = details.downloadUrl || details.download_url;
-  if (Array.isArray(dl) && dl.length) {
-    if (quality === 'auto') {
+    if (!details) return null;
+    const dl = details.downloadUrl || details.download_url;
+    if (Array.isArray(dl) && dl.length) {
+      if (quality === 'auto') {
+        return dl[dl.length - 1].link || dl[dl.length - 1].url || null;
+      }
+      if (quality === 'Less_low') {
+        const lessLow = dl.find(x => /48/i.test(x.quality));
+        if (lessLow) return lessLow.link || lessLow.url;
+      }
+      if (quality === 'low') {
+        const low = dl.find(x => /96/i.test(x.quality));
+        if (low) return low.link || low.url;
+      }
+      if (quality === 'medium') {
+        const med = dl.find(x => /160/i.test(x.quality));
+        if (med) return med.link || med.url;
+      }
+      if (quality === 'high') {
+        const high = dl.find(x => /320/i.test(x.quality));
+        if (high) return high.link || high.url;
+      }
       return dl[dl.length - 1].link || dl[dl.length - 1].url || null;
     }
-    if (quality === 'Less_low') {
-      const lessLow = dl.find(x => /48/i.test(x.quality));
-      if (lessLow) return lessLow.link || lessLow.url;
-    }
-    if (quality === 'low') {
-      const low = dl.find(x => /96/i.test(x.quality));
-      if (low) return low.link || low.url;
-    }
-    if (quality === 'medium') {
-      const med = dl.find(x => /160/i.test(x.quality));
-      if (med) return med.link || med.url;
-    }
-    if (quality === 'high') {
-      const high = dl.find(x => /320/i.test(x.quality));
-      if (high) return high.link || high.url;
-    }
-    return dl[dl.length - 1].link || dl[dl.length - 1].url || null;
+    return details.media_url || details.url || details.audio || null;
   }
-  return details.media_url || details.url || details.audio || null;
-}
 
 
-// Add to your existing DOM refs
-const flipInner = document.getElementById('flip-inner');
-const showLyricsBtn = document.getElementById('show-lyrics-btn');
-const showCoverBtn = document.getElementById('show-cover-btn');
+  // Add to your existing DOM refs
+  const flipInner = document.getElementById('flip-inner');
+  const showLyricsBtn = document.getElementById('show-lyrics-btn');
+  const showCoverBtn = document.getElementById('show-cover-btn');
 
-// Flip functionality with smart button visibility
-if (showLyricsBtn) {
-  showLyricsBtn.addEventListener('click', () => {
-    flipInner.classList.add('flipped');
-    // Buttons will be hidden/shown by CSS based on flipped class
-  });
-}
-
-if (showCoverBtn) {
-  showCoverBtn.addEventListener('click', () => {
-    flipInner.classList.remove('flipped');
-    // Buttons will be hidden/shown by CSS based on flipped class
-  });
-}
-
-// Update lyrics display function with compact styling
-function renderSyncedLyrics(lrcText) {
-  const lyricsContainer = document.getElementById('lyrics-container');
-  if (!lyricsContainer) return;
-  
-  lyricsContainer.innerHTML = '';
-  
-  if (!lrcText) {
-    lyricsContainer.innerHTML = '<p style="font-size:0.5rem; opacity:0.6;">No lyrics available</p>';
-    return;
+  // Flip functionality with smart button visibility
+  if (showLyricsBtn) {
+    showLyricsBtn.addEventListener('click', () => {
+      flipInner.classList.add('flipped');
+      // Buttons will be hidden/shown by CSS based on flipped class
+    });
   }
-  
-  // Your existing lyrics parsing logic...
-  // Add parsed lines to lyricsContainer with 'lyrics-line' class
-}
-  
+
+  if (showCoverBtn) {
+    showCoverBtn.addEventListener('click', () => {
+      flipInner.classList.remove('flipped');
+      // Buttons will be hidden/shown by CSS based on flipped class
+    });
+  }
+
+  // Update lyrics display function with compact styling
+  function renderSyncedLyrics(lrcText) {
+    const lyricsContainer = document.getElementById('lyrics-container');
+    if (!lyricsContainer) return;
+
+    lyricsContainer.innerHTML = '';
+
+    if (!lrcText) {
+      lyricsContainer.innerHTML = '<p style="font-size:0.5rem; opacity:0.6;">No lyrics available</p>';
+      return;
+    }
+
+    // Your existing lyrics parsing logic...
+    // Add parsed lines to lyricsContainer with 'lyrics-line' class
+  }
+
   // Lyrics parsing state
   let parsedLyrics = [];
 
@@ -280,7 +280,7 @@ function renderSyncedLyrics(lrcText) {
     }
   }
 
-  async function fetchLyrics(title, artist) {
+  async function fetchLyrics(title, artist, duration) {
     // defensive: require at least a title
     if (!title && !artist) return;
     // show loading
@@ -288,15 +288,111 @@ function renderSyncedLyrics(lrcText) {
     if (lyricsContainer) lyricsContainer.innerHTML = '<p>Loading lyrics…</p>';
     parsedLyrics = [];
 
-    try {
-      // LrcLib endpoint (as requested). Query by track + artist.
-      const url = `https://lrclib.net/api/get?track_name=${encodeURIComponent(title || '')}&artist_name=${encodeURIComponent(artist || '')}`;
-      const res = await fetch(url);
-      if (!res.ok) throw new Error('Lyrics API returned ' + res.status);
-      const data = await res.json();
+    const normalize = (s) => s ? s.toLowerCase().replace(/[^a-z0-9]/g, '') : '';
 
-      // The exact JSON shape may vary; try several fallbacks.
-      // Common possibilities: { syncedLyrics: '...[00:..]...', plainLyrics: '...' } or { lrc: '...' } or array
+    try {
+      let data = null;
+
+      // 1. Try exact match first (only if we don't have a specific reason to skip, but search is often better for fuzzy)
+      // Actually, let's try search directly if we want to prioritize synced lyrics across variations, 
+      // but 'get' is faster if it works. We'll try 'get' first.
+      const urlGet = `https://lrclib.net/api/get?track_name=${encodeURIComponent(title || '')}&artist_name=${encodeURIComponent(artist || '')}&duration=${duration || ''}`;
+      const resGet = await fetch(urlGet);
+
+      if (resGet.ok) {
+        const exactData = await resGet.json();
+        // If exact match has synced lyrics, great. If not, we might want to search to see if a better version exists?
+        // But usually 'get' returns the best match. Let's stick with it if it has synced lyrics.
+        if (exactData.syncedLyrics) {
+          data = exactData;
+        }
+      }
+
+      // 2. If no exact synced lyrics found, try search to find *any* version with synced lyrics
+      if (!data) {
+        console.log('Exact synced match not found, trying search...');
+        // Use primary artist for search to avoid separator mismatches (e.g. "," vs "&")
+        // This solves issues where our metadata has "A, B" but LrcLib has "A & B"
+        const primaryArtist = artist ? artist.split(/,|&|\band\b|\bfeat\.?\b|\bft\.?\b|\/|\+/i)[0].trim() : artist;
+        const urlSearch = `https://lrclib.net/api/search?track_name=${encodeURIComponent(title || '')}&artist_name=${encodeURIComponent(primaryArtist || '')}`;
+        const resSearch = await fetch(urlSearch);
+
+        if (resSearch.ok) {
+          const results = await resSearch.json();
+          if (Array.isArray(results) && results.length > 0) {
+            const targetTitle = normalize(title);
+
+            // Helper to split artist string into individual normalized tokens
+            const getArtistTokens = (s) => {
+              if (!s) return [];
+              const decoded = decodeHtmlEntities(s);
+              // Split by comma, &, 'and', 'feat.', 'ft.', '/', '+'
+              return decoded.toLowerCase().split(/,|&|\band\b|\bfeat\.\b|\bft\.\b|\/|\+/).map(t => t.trim().replace(/[^a-z0-9]/g, '')).filter(t => t.length > 0);
+            };
+
+            const targetArtistTokens = getArtistTokens(artist);
+
+            // Filter candidates
+            const candidates = results.filter(item => {
+              const itemTitle = normalize(item.trackName);
+
+              // Title check: allow partial match
+              if (!itemTitle.includes(targetTitle) && !targetTitle.includes(itemTitle)) return false;
+
+              // Artist check: Robust multi-artist matching
+              const itemArtistTokens = getArtistTokens(item.artistName);
+
+              // Check if ANY of the target artists match ANY of the item artists
+              // OR if the full normalized strings contain each other (fallback)
+              const hasTokenMatch = targetArtistTokens.some(t => itemArtistTokens.some(i => i.includes(t) || t.includes(i)));
+
+              if (hasTokenMatch) return true;
+
+              // Fallback: Check full string inclusion for cases where splitting failed
+              const itemArtist = normalize(item.artistName);
+              const targetArtist = normalize(artist);
+              return itemArtist.includes(targetArtist) || targetArtist.includes(itemArtist);
+            });
+
+            // Sort candidates to find the best one
+            candidates.sort((a, b) => {
+              // Priority 1: Has Synced Lyrics
+              const aSynced = !!a.syncedLyrics;
+              const bSynced = !!b.syncedLyrics;
+              if (aSynced && !bSynced) return -1;
+              if (!aSynced && bSynced) return 1;
+
+              // Priority 2: Duration Match (if available)
+              if (duration) {
+                const dur = parseFloat(duration);
+                const aDur = parseFloat(a.duration);
+                const bDur = parseFloat(b.duration);
+                if (!isNaN(dur) && !isNaN(aDur) && !isNaN(bDur)) {
+                  const aDiff = Math.abs(aDur - dur);
+                  const bDiff = Math.abs(bDur - dur);
+                  // If difference is significant (e.g. > 2s difference between candidates), prefer closer one
+                  if (Math.abs(aDiff - bDiff) > 2) {
+                    return aDiff - bDiff;
+                  }
+                }
+              }
+
+              // Priority 3: Title Length (closer to original title length is usually better)
+              const aLenDiff = Math.abs(normalize(a.trackName).length - targetTitle.length);
+              const bLenDiff = Math.abs(normalize(b.trackName).length - targetTitle.length);
+              return aLenDiff - bLenDiff;
+            });
+
+            if (candidates.length > 0) {
+              data = candidates[0];
+            }
+          }
+        }
+      }
+
+      if (!data) throw new Error('No lyrics found');
+
+      // Render Logic
       let lrc = null;
       if (data?.syncedLyrics) lrc = data.syncedLyrics;
       else if (data?.lrc) lrc = data.lrc;
@@ -305,9 +401,7 @@ function renderSyncedLyrics(lrcText) {
         if (lyricsContainer) lyricsContainer.innerHTML = `<p>${escapeHtml(data.plainLyrics)}</p>`;
         return;
       } else if (data?.lyrics) {
-        // sometimes `.lyrics` holds a plain string or lrc string
         if (typeof data.lyrics === 'string') {
-          // try to detect if it's lrc by searching timestamps
           if (/\[\d{1,2}:\d{2}/.test(data.lyrics)) lrc = data.lyrics;
           else {
             if (lyricsText) lyricsText.textContent = data.lyrics;
@@ -315,27 +409,11 @@ function renderSyncedLyrics(lrcText) {
             return;
           }
         }
-      } else if (Array.isArray(data) && data.length) {
-        // sometimes API returns an array of matches
-        const first = data[0];
-        if (first?.syncedLyrics) lrc = first.syncedLyrics;
-        else if (first?.lrc) lrc = first.lrc;
-        else if (first?.lyrics) {
-          if (typeof first.lyrics === 'string') {
-            if (/\[\d{1,2}:\d{2}/.test(first.lyrics)) lrc = first.lyrics;
-            else {
-              if (lyricsText) lyricsText.textContent = first.lyrics;
-              if (lyricsContainer) lyricsContainer.innerHTML = `<p>${escapeHtml(first.lyrics)}</p>`;
-              return;
-            }
-          }
-        }
       }
 
       if (lrc) {
         renderSyncedLyrics(lrc);
       } else {
-        // nothing useful found
         if (lyricsText) lyricsText.textContent = 'No lyrics available.';
         if (lyricsContainer) lyricsContainer.innerHTML = `<p>No lyrics available.</p>`;
       }
@@ -351,28 +429,28 @@ function renderSyncedLyrics(lrcText) {
     const cover = item?.cover || FALLBACK_COVER;
     const title = item?.title || 'No song';
     const artist = item?.artist || '—';
-    
+
     // Update floating player
     if (imgEl) imgEl.src = cover;
     if (titleEl) titleEl.textContent = title;
     if (artistEl) artistEl.textContent = artist;
     if (playBtn) playBtn.innerHTML = playing ? '<i data-lucide="pause"></i>' : '<i data-lucide="play"></i>';
-    
+
     // Update compact footer
     if (footerTrackImage) footerTrackImage.src = cover;
     if (footerTrackTitle) footerTrackTitle.textContent = title;
     if (footerTrackArtist) footerTrackArtist.textContent = artist;
     if (footerPlayBtn) footerPlayBtn.innerHTML = playing ? '<i data-lucide="pause"></i>' : '<i data-lucide="play"></i>';
-    
+
     // Show/hide compact footer based on whether we have a song
     if (compactFooter) {
-        if (item && title !== 'No song') {
-            compactFooter.style.display = 'flex';
-            compactFooter.classList.add('active');
-        } else {
-            compactFooter.style.display = 'none';
-            compactFooter.classList.remove('active');
-        }
+      if (item && title !== 'No song') {
+        compactFooter.style.display = 'flex';
+        compactFooter.classList.add('active');
+      } else {
+        compactFooter.style.display = 'none';
+        compactFooter.classList.remove('active');
+      }
     }
     // Update music banner
     if (bannerCover) bannerCover.src = cover;
@@ -382,7 +460,7 @@ function renderSyncedLyrics(lrcText) {
     if (document.querySelector('.player-container')) {
       document.querySelector('.player-container').style.setProperty('--banner-cover-url', `url("${cover}")`);
     }
-    
+
     refreshIcons();
   }
 
@@ -402,15 +480,15 @@ function renderSyncedLyrics(lrcText) {
   }
 
   function addToRecently(item) {
-  if (!item) return;
-  const key = item.id ? 'id:' + item.id : 't:' + item.title;
-  // Include the current quality setting in the item
-  recentlyPlayed = recentlyPlayed.filter(x => x._k !== key);
-  recentlyPlayed.unshift({ ...item, _k: key, quality: qualitySetting });
-  recentlyPlayed = recentlyPlayed.slice(0, 12);
-  saveRecentlyToStorage();
-  renderRecently();
-}
+    if (!item) return;
+    const key = item.id ? 'id:' + item.id : 't:' + item.title;
+    // Include the current quality setting in the item
+    recentlyPlayed = recentlyPlayed.filter(x => x._k !== key);
+    recentlyPlayed.unshift({ ...item, _k: key, quality: qualitySetting });
+    recentlyPlayed = recentlyPlayed.slice(0, 12);
+    saveRecentlyToStorage();
+    renderRecently();
+  }
 
   function renderRecently() {
     if (!recentlyWrap) return;
@@ -455,24 +533,25 @@ function renderSyncedLyrics(lrcText) {
   }
 
   async function ensureUrlFor(index, quality = qualitySetting) {
-  const item = queue[index];
-  if (!item) return null;
-  if (item.url) return item.url;
-  try {
-    const res = await fetch(`https://music45-api.vercel.app/api/songs?ids=${encodeURIComponent(item.id)}`);
-    const d = await res.json();
-    const full = d?.data?.[0] || d?.data || null;
-    if (!full) return null;
-    item.url = extractPlayableUrl(full, quality);  // Pass quality to extractPlayableUrl
-    item.title = getTitle(full) || item.title;
-    item.artist = getArtist(full) || item.artist;
-    item.cover = getCover(full) || item.cover;
-    return item.url || null;
-  } catch (e) {
-    console.error('Details failed', e);
-    return null;
+    const item = queue[index];
+    if (!item) return null;
+    if (item.url) return item.url;
+    try {
+      const res = await fetch(`https://music45-api.vercel.app/api/songs?ids=${encodeURIComponent(item.id)}`);
+      const d = await res.json();
+      const full = d?.data?.[0] || d?.data || null;
+      if (!full) return null;
+      item.url = extractPlayableUrl(full, quality);  // Pass quality to extractPlayableUrl
+      item.title = getTitle(full) || item.title;
+      item.artist = getArtist(full) || item.artist;
+      item.cover = getCover(full) || item.cover;
+      item.duration = full.duration || item.duration;
+      return item.url || null;
+    } catch (e) {
+      console.error('Details failed', e);
+      return null;
+    }
   }
-}
 
   async function playIndex(index) {
     if (index < 0 || index >= queue.length) return;
@@ -507,7 +586,7 @@ function renderSyncedLyrics(lrcText) {
 
     // Fetch lyrics for this track (non-blocking)
     try {
-      fetchLyrics(item.title || getTitle(item.raw), item.artist || getArtist(item.raw));
+      fetchLyrics(item.title || getTitle(item.raw), item.artist || getArtist(item.raw), item.duration || item.raw?.duration);
     } catch (e) {
       console.error('fetchLyrics threw', e);
     }
@@ -600,42 +679,42 @@ function renderSyncedLyrics(lrcText) {
 
   // Progress and Time (single consolidated handler; also does lyrics sync)
   audio.addEventListener('timeupdate', () => {
-  const cur = audio.currentTime || 0;
-  const dur = audio.duration || 0;
-  const pct = dur > 0 ? (cur / dur) * 100 : 0;
-  if (progressFill) progressFill.style.width = pct + '%';
-  if (bannerProgressFill) bannerProgressFill.style.width = pct + '%';
-  if (bannerProgressHandle) bannerProgressHandle.style.left = pct + '%';
-  if (footerProgressFill) footerProgressFill.style.width = pct + '%';
-  if (currentTimeEl) currentTimeEl.textContent = formatTime(cur);
-  if (durationEl) durationEl.textContent = formatTime(dur);
+    const cur = audio.currentTime || 0;
+    const dur = audio.duration || 0;
+    const pct = dur > 0 ? (cur / dur) * 100 : 0;
+    if (progressFill) progressFill.style.width = pct + '%';
+    if (bannerProgressFill) bannerProgressFill.style.width = pct + '%';
+    if (bannerProgressHandle) bannerProgressHandle.style.left = pct + '%';
+    if (footerProgressFill) footerProgressFill.style.width = pct + '%';
+    if (currentTimeEl) currentTimeEl.textContent = formatTime(cur);
+    if (durationEl) durationEl.textContent = formatTime(dur);
 
-  // === Lyrics sync ===
-  if (parsedLyrics && parsedLyrics.length && lyricsContainer) {
-    // find current active index
-    let activeIndex = parsedLyrics.findIndex((l, i) =>
-      cur >= l.time && (!parsedLyrics[i + 1] || cur < parsedLyrics[i + 1].time)
-    );
+    // === Lyrics sync ===
+    if (parsedLyrics && parsedLyrics.length && lyricsContainer) {
+      // find current active index
+      let activeIndex = parsedLyrics.findIndex((l, i) =>
+        cur >= l.time && (!parsedLyrics[i + 1] || cur < parsedLyrics[i + 1].time)
+      );
 
-    if (activeIndex >= 0) {
-      // Don't focus on the last line
-      const isLastLine = activeIndex === parsedLyrics.length - 1;
-      
-      // toggle active classes
-      const children = [...lyricsContainer.children];
-      children.forEach((p, i) => {
-        p.classList.toggle('active-line', i === activeIndex && !isLastLine);
-        
-        // Only scroll if it's not the last line
-        if (i === activeIndex && !isLastLine) {
-          try {
-            p.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          } catch (e) { /* ignore scroll errors on some devices */ }
-        }
-      });
+      if (activeIndex >= 0) {
+        // Don't focus on the last line
+        const isLastLine = activeIndex === parsedLyrics.length - 1;
+
+        // toggle active classes
+        const children = [...lyricsContainer.children];
+        children.forEach((p, i) => {
+          p.classList.toggle('active-line', i === activeIndex && !isLastLine);
+
+          // Only scroll if it's not the last line
+          if (i === activeIndex && !isLastLine) {
+            try {
+              p.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            } catch (e) { /* ignore scroll errors on some devices */ }
+          }
+        });
+      }
     }
-  }
-});
+  });
 
   // Click-to-seek handler for the main (non-banner) player
   if (progressTrack) {
@@ -649,49 +728,49 @@ function renderSyncedLyrics(lrcText) {
   // Enhanced seeking logic (drag and click) for the music banner progress bar
   let isSeeking = false;
 
-    function handleSeek(e) {
-        if (!isFinite(audio.duration)) return;
+  function handleSeek(e) {
+    if (!isFinite(audio.duration)) return;
 
-        e.preventDefault();
+    e.preventDefault();
 
-        const trackRect = bannerProgressTrack.getBoundingClientRect();
-        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-        
-        let percent = (clientX - trackRect.left) / trackRect.width;
-        percent = Math.max(0, Math.min(1, percent));
+    const trackRect = bannerProgressTrack.getBoundingClientRect();
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
 
-        const newTime = percent * audio.duration;
-        audio.currentTime = newTime;
+    let percent = (clientX - trackRect.left) / trackRect.width;
+    percent = Math.max(0, Math.min(1, percent));
 
-        // Immediate UI update for responsiveness
-        const pct = percent * 100;
-        if (bannerProgressFill) bannerProgressFill.style.width = pct + '%';
-        if (bannerProgressHandle) bannerProgressHandle.style.left = pct + '%';
-    }
+    const newTime = percent * audio.duration;
+    audio.currentTime = newTime;
 
-    function startSeeking(e) {
-        isSeeking = true;
-        handleSeek(e);
-        
-        document.addEventListener('mousemove', handleSeek);
-        document.addEventListener('touchmove', handleSeek, { passive: false });
-        
-        document.addEventListener('mouseup', stopSeeking);
-        document.addEventListener('touchend', stopSeeking);
-    }
+    // Immediate UI update for responsiveness
+    const pct = percent * 100;
+    if (bannerProgressFill) bannerProgressFill.style.width = pct + '%';
+    if (bannerProgressHandle) bannerProgressHandle.style.left = pct + '%';
+  }
 
-    function stopSeeking() {
-        isSeeking = false;
-        document.removeEventListener('mousemove', handleSeek);
-        document.removeEventListener('touchmove', handleSeek);
-        document.removeEventListener('mouseup', stopSeeking);
-        document.removeEventListener('touchend', stopSeeking);
-    }
+  function startSeeking(e) {
+    isSeeking = true;
+    handleSeek(e);
 
-    if (bannerProgressTrack) {
-        bannerProgressTrack.addEventListener('mousedown', startSeeking);
-        bannerProgressTrack.addEventListener('touchstart', startSeeking, { passive: false });
-    }
+    document.addEventListener('mousemove', handleSeek);
+    document.addEventListener('touchmove', handleSeek, { passive: false });
+
+    document.addEventListener('mouseup', stopSeeking);
+    document.addEventListener('touchend', stopSeeking);
+  }
+
+  function stopSeeking() {
+    isSeeking = false;
+    document.removeEventListener('mousemove', handleSeek);
+    document.removeEventListener('touchmove', handleSeek);
+    document.removeEventListener('mouseup', stopSeeking);
+    document.removeEventListener('touchend', stopSeeking);
+  }
+
+  if (bannerProgressTrack) {
+    bannerProgressTrack.addEventListener('mousedown', startSeeking);
+    bannerProgressTrack.addEventListener('touchstart', startSeeking, { passive: false });
+  }
 
   audio.addEventListener('play', () => {
     isPlaying = true;
@@ -715,7 +794,7 @@ function renderSyncedLyrics(lrcText) {
         if (currentSong && currentSong.id) {
           // Fetch suggestions based on current song
           const suggestions = await fetchSongSuggestions(currentSong.id);
-          
+
           if (suggestions.length > 0) {
             // Convert suggestions to queue format
             const suggestedQueue = suggestions.map(s => ({
@@ -726,7 +805,7 @@ function renderSyncedLyrics(lrcText) {
               url: null,
               raw: s
             }));
-            
+
             // Add suggestions to queue and play the first one
             queue = suggestedQueue;
             currentIndex = 0;
@@ -743,7 +822,7 @@ function renderSyncedLyrics(lrcText) {
           return;
         }
       }
-      
+
       // If no suggestions or not at end of queue, proceed normally
       nextSong();
     }
@@ -839,19 +918,19 @@ function renderSyncedLyrics(lrcText) {
 
   // Music banner open/close
   // Compact footer controls
-if (footerPlayBtn) footerPlayBtn.addEventListener('click', togglePlay);
-if (footerNextBtn) footerNextBtn.addEventListener('click', nextSong);
-if (footerOpenBanner) {
+  if (footerPlayBtn) footerPlayBtn.addEventListener('click', togglePlay);
+  if (footerNextBtn) footerNextBtn.addEventListener('click', nextSong);
+  if (footerOpenBanner) {
     footerOpenBanner.addEventListener('click', () => {
-        if (isMobileDevice()) {
-            if (musicBanner) {
-                musicBanner.style.display = 'flex';
-                musicBanner.classList.add('active');
-                history.pushState({ bannerView: true }, 'Now Playing', '#now-playing');
-            }
+      if (isMobileDevice()) {
+        if (musicBanner) {
+          musicBanner.style.display = 'flex';
+          musicBanner.classList.add('active');
+          history.pushState({ bannerView: true }, 'Now Playing', '#now-playing');
         }
+      }
     });
-}
+  }
 
   if (closeBannerBtn) {
     closeBannerBtn.addEventListener('click', () => {
@@ -1015,41 +1094,41 @@ if (footerOpenBanner) {
     });
   }
 
-  
-async function loadMultipleNewReleaseAlbums() {
-  const albumIds = ['56535946', '1055473']; // 🟢 Add more album IDs here
-  const wrap = document.getElementById('new-releases');
-  if (!wrap) {
-    console.error('new-releases container not found');
-    return;
-  }
-  wrap.innerHTML = ''; // clear old albums
 
-  for (const albumId of albumIds) {
-    const apiUrl = `https://music45-api.vercel.app/api/albums?id=${encodeURIComponent(albumId)}`;
-    try {
-      const resp = await fetch(apiUrl);
-      if (!resp.ok) throw new Error(`Failed fetch album: ${albumId}`);
-      const data = await resp.json();
-      const album = data?.data?.[0] || data?.data;
-      if (!album) continue;
+  async function loadMultipleNewReleaseAlbums() {
+    const albumIds = ['56535946', '1055473']; // 🟢 Add more album IDs here
+    const wrap = document.getElementById('new-releases');
+    if (!wrap) {
+      console.error('new-releases container not found');
+      return;
+    }
+    wrap.innerHTML = ''; // clear old albums
 
-      const card = document.createElement('div');
-      card.className = 'music-card';
-      const cover = getCover(album);
-      const title = album.name || album.title || 'Unknown Album';
+    for (const albumId of albumIds) {
+      const apiUrl = `https://music45-api.vercel.app/api/albums?id=${encodeURIComponent(albumId)}`;
+      try {
+        const resp = await fetch(apiUrl);
+        if (!resp.ok) throw new Error(`Failed fetch album: ${albumId}`);
+        const data = await resp.json();
+        const album = data?.data?.[0] || data?.data;
+        if (!album) continue;
 
-      card.innerHTML = `
+        const card = document.createElement('div');
+        card.className = 'music-card';
+        const cover = getCover(album);
+        const title = album.name || album.title || 'Unknown Album';
+
+        card.innerHTML = `
         <img src="${cover}" alt="${escapeHtml(title)}">
         <span>${escapeHtml(title)}</span>
       `;
-      card.addEventListener('click', () => playAlbum(albumId));
-      wrap.appendChild(card);
-    } catch (err) {
-      console.error('Error loading album:', albumId, err);
+        card.addEventListener('click', () => playAlbum(albumId));
+        wrap.appendChild(card);
+      } catch (err) {
+        console.error('Error loading album:', albumId, err);
+      }
     }
   }
-}
 
 
 
