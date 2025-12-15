@@ -317,6 +317,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     try {
       let data = null;
+      let fallbackData = null;
+
+      // Helper for language check
+      const isLatin = (s) => {
+        if (!s) return false;
+        const latinCount = (s.match(/[a-zA-Z]/g) || []).length;
+        const nonLatinCount = (s.match(/[^\x00-\x7F]/g) || []).length;
+        return latinCount > nonLatinCount;
+      };
 
       // 1. Try exact match first (only if we don't have a specific reason to skip, but search is often better for fuzzy)
       // Actually, let's try search directly if we want to prioritize synced lyrics across variations, 
@@ -326,10 +335,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (resGet.ok) {
         const exactData = await resGet.json();
-        // If exact match has synced lyrics, great. If not, we might want to search to see if a better version exists?
-        // But usually 'get' returns the best match. Let's stick with it if it has synced lyrics.
         if (exactData.syncedLyrics) {
-          data = exactData;
+          // Check if it matches our language preference (Latin)
+          if (isLatin(exactData.syncedLyrics)) {
+            data = exactData;
+          } else {
+            console.log('Exact match found but not Latin, saving as fallback and trying search...');
+            fallbackData = exactData;
+          }
         }
       }
 
@@ -402,7 +415,21 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
               }
 
-              // Priority 3: Title Length (closer to original title length is usually better)
+              // Priority 3: Language Preference (English/Latin script preferred)
+              // This helps choose Hinglish/English over Devanagari/Other scripts
+              // Priority 3: Language Preference (English/Latin script preferred)
+              // This helps choose Hinglish/English over Devanagari/Other scripts
+              // isLatin is defined above
+
+              const aText = a.plainLyrics || a.syncedLyrics || "";
+              const bText = b.plainLyrics || b.syncedLyrics || "";
+              const aIsLatin = isLatin(aText);
+              const bIsLatin = isLatin(bText);
+
+              if (aIsLatin && !bIsLatin) return -1;
+              if (!aIsLatin && bIsLatin) return 1;
+
+              // Priority 4: Title Length (closer to original title length is usually better)
               const aLenDiff = Math.abs(normalize(a.trackName).length - targetTitle.length);
               const bLenDiff = Math.abs(normalize(b.trackName).length - targetTitle.length);
               return aLenDiff - bLenDiff;
@@ -413,6 +440,11 @@ document.addEventListener('DOMContentLoaded', () => {
             }
           }
         }
+      }
+
+      // If we didn't find a better match in search, use the fallback (non-Latin exact match)
+      if (!data && fallbackData) {
+        data = fallbackData;
       }
 
       if (!data) throw new Error('No lyrics found');
