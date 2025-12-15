@@ -247,15 +247,40 @@ document.addEventListener('DOMContentLoaded', () => {
     // tolerate different time formats: [mm:ss.xx] or [m:ss] etc.
     const lines = lrcText.split('\n');
     parsedLyrics = lines.map(line => {
-      // support multiple timestamps on a single line, handle them separately
+      line = line.trim();
+      if (!line) return null;
+
+      // 1. Try standard LRC: [mm:ss.xx]
       const tsMatches = [...line.matchAll(/\[(\d{1,2}):(\d{2}(?:\.\d+)?)\]/g)];
-      const text = line.replace(/\[(\d{1,2}):(\d{2}(?:\.\d+)?)\]/g, '').trim();
-      if (!tsMatches.length) return null;
-      return tsMatches.map(m => {
-        const min = parseInt(m[1], 10);
-        const sec = parseFloat(m[2]);
-        return { time: min * 60 + sec, text: text || '' };
-      });
+      if (tsMatches.length > 0) {
+        const text = line.replace(/\[(\d{1,2}):(\d{2}(?:\.\d+)?)\]/g, '').trim();
+        return tsMatches.map(m => {
+          const min = parseInt(m[1], 10);
+          const sec = parseFloat(m[2]);
+          return { time: min * 60 + sec, text: text || '' };
+        });
+      }
+
+      // 2. Try format: HH:MM:SS.mmm ~ HH:MM:SS.mmm Text (or similar)
+      // Example: 00:01:37.290 ~ 00:01:39.770  Ni dell mull...
+      // Regex: Start with HH:MM:SS.mmm or MM:SS.mmm
+      const complexMatch = line.match(/^(\d{2}):(\d{2}):(\d{2}(?:\.\d+)?)/);
+      if (complexMatch) {
+        const h = parseInt(complexMatch[1], 10);
+        const m = parseInt(complexMatch[2], 10);
+        const s = parseFloat(complexMatch[3]);
+        const time = h * 3600 + m * 60 + s;
+
+        // Remove the timestamp(s) part to get text
+        // Matches "Start ~ End" or just "Start"
+        let text = line.replace(/^[\d:.]+(\s*~\s*[\d:.]+)?\s*/, '').trim();
+        // Remove trailing slash if present
+        text = text.replace(/\/$/, '').trim();
+
+        return [{ time, text }];
+      }
+
+      return null;
     }).filter(Boolean).flat().sort((a, b) => a.time - b.time);
 
     if (!parsedLyrics.length) {
