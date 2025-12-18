@@ -197,21 +197,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Add to your existing DOM refs
   const flipInner = document.getElementById('flip-inner');
-  const showLyricsBtn = document.getElementById('show-lyrics-btn');
-  const showCoverBtn = document.getElementById('show-cover-btn');
+  const showLyricsBtn = document.getElementById('show-lyrics-btn'); // Removed in HTML but kept ref for safety or remove
+  const showCoverBtn = document.getElementById('show-cover-btn'); // Removed in HTML
 
   // Flip functionality with smart button visibility
-  if (showLyricsBtn) {
-    showLyricsBtn.addEventListener('click', () => {
-      flipInner.classList.add('flipped');
-      // Buttons will be hidden/shown by CSS based on flipped class
+  // Flip functionality - Click Cover to Open Lyrics
+  if (bannerCover) {
+    bannerCover.addEventListener('click', () => {
+      // Toggle lyrics view
+      if (!flipInner.classList.contains('flipped')) {
+        flipInner.classList.add('flipped');
+        history.pushState({ bannerView: true, lyricsView: true }, 'Lyrics', '#lyrics');
+      }
     });
   }
 
-  if (showCoverBtn) {
-    showCoverBtn.addEventListener('click', () => {
-      flipInner.classList.remove('flipped');
-      // Buttons will be hidden/shown by CSS based on flipped class
+  // Click lyrics area to close (go back)
+  const lyricsClickArea = document.getElementById('lyrics-click-area');
+  if (lyricsClickArea) {
+    lyricsClickArea.addEventListener('click', (e) => {
+      // Only close if clicking the header/click area, not necessarily the text selection?
+      // Actually user wants "first back lyrics close", but clicking the area (header) is a good alternative.
+      history.back();
     });
   }
 
@@ -956,6 +963,14 @@ document.addEventListener('DOMContentLoaded', () => {
     } else {
       if (settingsSheet) settingsSheet.classList.remove('active');
     }
+
+    // Lyrics View State Logic
+    if (window.history.state && window.history.state.lyricsView) {
+      if (flipInner) flipInner.classList.add('flipped');
+    } else {
+      if (flipInner) flipInner.classList.remove('flipped');
+    }
+
     if (window.history.state && window.history.state.bannerView && isMobileDevice()) {
       if (musicBanner) {
         musicBanner.style.display = 'flex';
@@ -990,20 +1005,29 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   if (closeBannerBtn) {
-    closeBannerBtn.addEventListener('click', () => {
+    const closeAction = (e) => {
+      // Prevent ghost clicks if using touch
+      if (e.type === 'touchstart') {
+        e.preventDefault();
+      }
+
       if (musicBanner) {
         musicBanner.style.display = 'none';
         musicBanner.classList.remove('active');
-        if (window.history.state && window.history.state.bannerView) history.back();
+
+        // Smart back navigation to ensure banner closes completely
+        if (window.history.state && window.history.state.lyricsView) {
+          // If lyrics are open, we are 2 steps deep (Banner -> Lyrics)
+          history.go(-2);
+        } else if (window.history.state && window.history.state.bannerView) {
+          // If just banner is open
+          history.back();
+        }
       }
-    });
-    closeBannerBtn.addEventListener('touchstart', () => {
-      if (musicBanner) {
-        musicBanner.style.display = 'none';
-        musicBanner.classList.remove('active');
-        if (window.history.state && window.history.state.bannerView) history.back();
-      }
-    });
+    };
+
+    closeBannerBtn.addEventListener('click', closeAction);
+    closeBannerBtn.addEventListener('touchstart', closeAction, { passive: false });
   }
 
   if (bannerPlayPauseBtn) bannerPlayPauseBtn.addEventListener('click', togglePlay);
