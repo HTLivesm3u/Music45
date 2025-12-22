@@ -1144,6 +1144,7 @@ document.addEventListener('DOMContentLoaded', () => {
               <span class="track-title">${getTitle(s)}</span>
               <span class="track-artist">${getArtist(s)}</span>
             </div>
+            <div class="track-duration">${formatTime(s.duration)}</div>
             <div class="track-more"><i data-lucide="more-horizontal"></i></div>
           `;
           div.addEventListener('click', () => {

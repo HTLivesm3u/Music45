@@ -420,6 +420,12 @@ body {
     color: var(--foreground-muted);
 }
 
+.track-duration {
+    font-size: 0.8rem;
+    color: var(--foreground-muted);
+    margin-right: 0.5rem;
+}
+
 .track-more {
     color: var(--foreground-muted);
 }
