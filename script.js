@@ -130,7 +130,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Helpers
   const FALLBACK_COVER = 'LOGO.jpg'; // Local fallback image
-  const escapeHtml = s => String(s || '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+  const escapeHtml = s => String(s || '').replace(/[&<>"']/g, c => ({ '&': '&', '<': '<', '>': '>', '"': '"', "'": '&#39;' })[c]);
   const getTitle = s => decodeHtmlEntities(s?.name || s?.song || s?.title || 'Unknown Title');
   const getArtist = s => {
     let a =
@@ -1110,21 +1110,42 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const albumCoverEl = document.getElementById('album-cover');
       const albumTitleEl = document.getElementById('album-title');
+      const albumStickyTitleEl = document.getElementById('album-sticky-title');
       const albumArtistEl = document.getElementById('album-artist');
+      const albumArtistImgEl = document.getElementById('album-artist-img');
+      const albumYearEl = document.getElementById('album-year');
       const albumPlayBtn = document.getElementById('album-play');
       const albumViewEl = document.getElementById('album-view');
       const tracksWrap = document.getElementById('album-tracks');
+      const albumScroll = document.querySelector('.album-content-scroll');
+      const albumStickyHeader = document.querySelector('.album-sticky-header');
 
-      if (albumCoverEl) albumCoverEl.src = getCover(album);
-      if (albumTitleEl) albumTitleEl.textContent = getTitle(album);
-      if (albumArtistEl) albumArtistEl.textContent = getArtist(album);
+      const title = getTitle(album);
+      const artist = getArtist(album);
+      const cover = getCover(album);
+      const year = album.year || '';
+
+      if (albumCoverEl) albumCoverEl.src = cover;
+      if (albumTitleEl) albumTitleEl.textContent = title;
+      if (albumStickyTitleEl) albumStickyTitleEl.textContent = title;
+      if (albumArtistEl) albumArtistEl.textContent = artist;
+      if (albumArtistImgEl) albumArtistImgEl.src = cover;
+      if (albumYearEl) albumYearEl.textContent = year ? 'Album • ' + year : 'Album';
+
 
       if (tracksWrap) {
         tracksWrap.innerHTML = '';
         songs.forEach((s, i) => {
           const div = document.createElement('div');
           div.className = 'album-track';
-          div.innerHTML = `<span>${getTitle(s)}</span><small>${getArtist(s)}</small>`;
+          div.innerHTML = `
+            <span class="track-index">${i + 1}</span>
+            <div class="track-name-wrapper">
+              <span class="track-title">${getTitle(s)}</span>
+              <span class="track-artist">${getArtist(s)}</span>
+            </div>
+            <div class="track-more"><i data-lucide="more-horizontal"></i></div>
+          `;
           div.addEventListener('click', () => {
             queue = songs.map(x => ({
               id: x.id,
@@ -1139,6 +1160,7 @@ document.addEventListener('DOMContentLoaded', () => {
           });
           tracksWrap.appendChild(div);
         });
+        refreshIcons();
       }
 
       if (albumPlayBtn) {
@@ -1156,8 +1178,20 @@ document.addEventListener('DOMContentLoaded', () => {
         };
       }
 
-      if (albumViewEl) albumViewEl.style.display = 'block';
-      history.pushState({ albumView: true }, getTitle(album), '#' + encodeURIComponent(getTitle(album).replace(/\s+/g, '')));
+      if (albumViewEl) {
+        albumViewEl.style.display = 'flex';
+        if (albumScroll) {
+          albumScroll.scrollTop = 0;
+          albumScroll.onscroll = () => {
+            if (albumScroll.scrollTop > 150) {
+              albumStickyHeader.classList.add('scrolled');
+            } else {
+              albumStickyHeader.classList.remove('scrolled');
+            }
+          };
+        }
+        history.pushState({ albumView: true }, title, '#' + encodeURIComponent(title.replace(/\s+/g, '')));
+      }
     } catch (e) {
       console.error('Failed to fetch album songs', e);
       alert('Failed to load album songs.');
@@ -1174,7 +1208,6 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
   }
-
 
   async function loadMultipleNewReleaseAlbums() {
     const albumIds = ['56535946', '1055473']; // 🟢 Add more album IDs here

@@ -34,21 +34,41 @@
       <!-- 🏠 HOME TAB -->
       <div class="tab-view" id="tab-home">
 
-        <!-- 🎵 Album Detail View -->
-        <div class="album-view" id="album-view" style="display:none;">
-          <div class="album-topbar">
-            <button id="album-back" class="album-back">
-              <i data-lucide="arrow-left"></i>
-            </button>
-          </div>
+        <!-- 🎵 Album Detail View (Moved outside tabs) -->
+      <div class="album-view" id="album-view" style="display:none;">
+        <div class="album-sticky-header" id="album-sticky-header">
+          <button id="album-back" class="album-back">
+            <i data-lucide="arrow-left"></i>
+          </button>
+          <h3 id="album-sticky-title">Album Title</h3>
+        </div>
+
+        <div class="album-content-scroll">
+          <div class="album-header-glow"></div>
           <div class="album-header">
-            <img id="album-cover" src="" alt="Album Cover">
-            <h2 id="album-title">Album Title</h2>
-            <p id="album-artist">Album Artist</p>
-            <button id="album-play" class="play-button"><i data-lucide="play"></i></button>
+            <div class="album-cover-wrapper">
+              <img id="album-cover" src="" alt="Album Cover">
+            </div>
+            <div class="album-info-meta">
+              <h2 id="album-title">Album Title</h2>
+              <div class="album-artist-row">
+                <img id="album-artist-img" src="LOGO.jpg" alt="Artist" class="mini-artist-img">
+                <p id="album-artist">Album Artist</p>
+              </div>
+              <div class="album-stats">
+                <span>Album</span> • <span id="album-year">2024</span>
+              </div>
+            </div>
+            <div class="album-actions">
+              <button id="album-play" class="album-big-play"><i data-lucide="play"></i></button>
+              <button class="album-action-icon"><i data-lucide="heart"></i></button>
+              <button class="album-action-icon"><i data-lucide="arrow-down-circle"></i></button>
+              <button class="album-action-icon"><i data-lucide="more-horizontal"></i></button>
+            </div>
           </div>
           <div class="album-tracks" id="album-tracks"></div>
         </div>
+      </div>
 
         <!-- Albums -->
         <div class="section">
