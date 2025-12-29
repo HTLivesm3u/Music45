@@ -128,6 +128,13 @@ document.addEventListener('DOMContentLoaded', () => {
   let qualitySetting = localStorage.getItem('qualitySetting') || 'auto';
   let queueSource = 'generic';
 
+  // Pagination State
+  let currentViewId = null;
+  let currentViewType = null; // 'album' or 'playlist'
+  let currentViewPage = 1;
+  let currentViewTotal = 0;
+  let currentLoadedCount = 0;
+
   // Helpers
   const FALLBACK_COVER = 'LOGO.jpg'; // Local fallback image
   const escapeHtml = s => String(s || '').replace(/[&<>"']/g, c => ({ '&': '&', '<': '<', '>': '>', '"': '"', "'": '&#39;' })[c]);
@@ -1119,6 +1126,9 @@ document.addEventListener('DOMContentLoaded', () => {
       const tracksWrap = document.getElementById('album-tracks');
       const albumScroll = document.querySelector('.album-content-scroll');
       const albumStickyHeader = document.querySelector('.album-sticky-header');
+      const loadMoreContainer = document.getElementById('album-load-more-container');
+
+      if (loadMoreContainer) loadMoreContainer.style.display = 'none';
 
       const title = getTitle(album);
       const artist = getArtist(album);
@@ -1210,6 +1220,174 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  async function playPlaylist(playlistId, page = 1) {
+    try {
+      if (page === 1) {
+        // Reset state on new playlist load
+        currentViewId = playlistId;
+        currentViewType = 'playlist';
+        currentViewPage = 1;
+        currentLoadedCount = 0;
+        currentViewTotal = 0;
+
+        // Show loading state or clear previous
+        const tracksWrap = document.getElementById('album-tracks');
+        if (tracksWrap) tracksWrap.innerHTML = '<p style="padding:20px; text-align:center;">Loading...</p>';
+      }
+
+      const limit = 20; // Default page limit
+      const res = await fetch(`https://music45-api.vercel.app/api/playlists?id=${encodeURIComponent(playlistId)}&page=${page}&limit=${limit}`);
+      const data = await res.json();
+      const playlist = data?.data;
+      const songs = playlist?.songs || [];
+
+      if (!songs.length && page === 1) {
+        alert('No songs found in this playlist.');
+        return;
+      }
+
+      const albumCoverEl = document.getElementById('album-cover');
+      const albumTitleEl = document.getElementById('album-title');
+      const albumStickyTitleEl = document.getElementById('album-sticky-title');
+      const albumArtistEl = document.getElementById('album-artist');
+      const albumArtistImgEl = document.getElementById('album-artist-img');
+      const albumYearEl = document.getElementById('album-year');
+      const albumPlayBtn = document.getElementById('album-play');
+      const albumViewEl = document.getElementById('album-view');
+      const tracksWrap = document.getElementById('album-tracks');
+      const albumScroll = document.querySelector('.album-content-scroll');
+      const albumStickyHeader = document.querySelector('.album-sticky-header');
+      const loadMoreContainer = document.getElementById('album-load-more-container');
+      const loadMoreBtn = document.getElementById('album-load-more-btn');
+
+      const title = playlist.name || playlist.title || 'Playlist';
+      const artist = 'Playlist';
+      const cover = getCover(playlist);
+
+      // Metadata updates only on first page
+      if (page === 1) {
+        if (albumCoverEl) albumCoverEl.src = cover;
+        if (albumTitleEl) albumTitleEl.textContent = title;
+        if (albumStickyTitleEl) albumStickyTitleEl.textContent = title;
+        if (albumArtistEl) albumArtistEl.textContent = artist;
+        if (albumArtistImgEl) albumArtistImgEl.src = cover;
+        if (albumYearEl) albumYearEl.textContent = playlist.songCount ? `${playlist.songCount} Songs` : 'Playlist';
+
+        currentViewTotal = parseInt(playlist.songCount || 0) || 0;
+        if (tracksWrap) tracksWrap.innerHTML = ''; // Clear loading text
+      }
+
+      if (tracksWrap) {
+        songs.forEach((s, i) => {
+          // Adjust index for pagination ?? API might not give global index. 
+          // We'll just use currentLoadedCount + i + 1
+          const displayIndex = currentLoadedCount + i + 1;
+
+          const div = document.createElement('div');
+          div.className = 'album-track';
+          div.innerHTML = `
+            <span class="track-index">${displayIndex}</span>
+            <div class="track-name-wrapper">
+              <span class="track-title">${getTitle(s)}</span>
+              <span class="track-artist">${getArtist(s)}</span>
+            </div>
+            <div class="track-duration">${formatTime(s.duration)}</div>
+            <div class="track-more"><i data-lucide="more-horizontal"></i></div>
+          `;
+          div.addEventListener('click', () => {
+            // NOTE: If we click a song in a paginated playlist, we ideally want the queue to be the *entire* text so far,
+            // or at least this chunk. For simplicity, we'll set queue to all CURRENTLY loaded songs in DOM order? 
+            // Or just this chunk? 
+            // Better UX: Append to a global "playlistSongs" array as we load, and use that for queue.
+            // For now, let's just make a queue from *this batch* or try to reconstruct. 
+            // A simple approach: When clicking a song, play IT. 
+            // If user wants to seek, we ideally need the full context. 
+            // Let's rely on the fact that we can just play this song. 
+            // BUT standard behavior is "play from here". 
+            // Let's simplisticly set queue to these new songs? No, breaks previous songs.
+            // Let's Accumulate.
+
+            // Actually, simply setting queue to 'songs' (current batch) is safest for now to avoid complexity 
+            // with merging previous batches if we didn't store them.
+            // User requested "load more", they probably just want to find a song.
+            // Let's stick to: Queue = All Currently Displayed Songs?
+            // To do that, we'd need to store `allLoadedPlaylistSongs`.
+
+            // Let's implement `allLoadedPlaylistSongs`.
+            if (page === 1) window.allLoadedPlaylistSongs = [];
+
+            // This logic is tricky inside the loop because we are adding listeners *now*.
+            // Instead, we should update the queue wrapper logic.
+
+            // Simpler: Just set queue to this song + rest of batch.
+            queue = songs.map(x => ({
+              id: x.id,
+              title: getTitle(x),
+              artist: getArtist(x),
+              cover: getCover(x),
+              url: null,
+              raw: x
+            }));
+            currentIndex = i;
+            playIndex(i);
+          });
+          tracksWrap.appendChild(div);
+        });
+
+        // Append to global tracker
+        if (page === 1) window.allLoadedPlaylistSongs = [...songs];
+        else window.allLoadedPlaylistSongs.push(...songs);
+
+        currentLoadedCount += songs.length;
+        refreshIcons();
+      }
+
+      // Handle Load More Button
+      if (loadMoreContainer) {
+        if (songs.length === limit) {
+          loadMoreContainer.style.display = 'block';
+        } else {
+          loadMoreContainer.style.display = 'none';
+        }
+      }
+
+      if (albumPlayBtn && page === 1) {
+        albumPlayBtn.onclick = () => {
+          if (!window.allLoadedPlaylistSongs || !window.allLoadedPlaylistSongs.length) return;
+          queue = window.allLoadedPlaylistSongs.map(x => ({
+            id: x.id,
+            title: getTitle(x),
+            artist: getArtist(x),
+            cover: getCover(x),
+            url: null,
+            raw: x
+          }));
+          currentIndex = 0;
+          playIndex(0);
+        };
+      }
+
+      if (albumViewEl && page === 1) {
+        albumViewEl.style.display = 'flex';
+        // Reset scroll only on first load
+        if (albumScroll) {
+          albumScroll.scrollTop = 0;
+          albumScroll.onscroll = () => {
+            if (albumScroll.scrollTop > 150) {
+              albumStickyHeader.classList.add('scrolled');
+            } else {
+              albumStickyHeader.classList.remove('scrolled');
+            }
+          };
+        }
+        history.pushState({ albumView: true }, title, '#' + encodeURIComponent(title.replace(/\s+/g, '')));
+      }
+    } catch (e) {
+      console.error('Failed to fetch playlist songs', e);
+      alert('Failed to load playlist songs.');
+    }
+  }
+
   async function loadMultipleNewReleaseAlbums() {
     const albumIds = ['56535946', '1055473']; // 🟢 Add more album IDs here
     const wrap = document.getElementById('new-releases');
@@ -1256,40 +1434,111 @@ document.addEventListener('DOMContentLoaded', () => {
     const query = (searchInput && searchInput.value || '').trim();
     if (!query) return;
     try {
-      const res = await fetch(`https://music45-api.vercel.app/api/search/songs?query=${encodeURIComponent(query)}`);
+      // GLOBAL SEARCH
+      const res = await fetch(`https://music45-api.vercel.app/api/search?query=${encodeURIComponent(query)}`);
       const data = await res.json();
-      const results = data?.data?.results || [];
+
+      const allData = data?.data || {};
+      const songs = allData.songs?.results || [];
+      const albums = allData.albums?.results || [];
+      const playlists = allData.playlists?.results || [];
+      const artists = allData.artists?.results || [];
+
       if (searchResultsWrap) searchResultsWrap.innerHTML = '';
-      if (!results.length) {
+
+      const hasAnyResults = songs.length || albums.length || playlists.length || artists.length;
+
+      if (!hasAnyResults) {
         if (searchResultsWrap) searchResultsWrap.innerHTML = `<p style="color:var(--foreground-muted)">No results found.</p>`;
         return;
       }
-      results.forEach((r, i) => {
-        const item = {
-          id: r.id,
-          title: getTitle(r),
-          artist: getArtist(r),
-          cover: getCover(r),
-          url: null,
-          raw: r
-        };
-        const div = document.createElement('div');
-        div.className = 'search-result-item';
-        div.innerHTML = `
-          <img src="${item.cover}" alt="${item.title}">
-          <div class="search-result-info">
-            <h4>${item.title}</h4>
-            <p>${item.artist}</p>
-          </div>
-        `;
-        div.addEventListener('click', () => {
-          queueSource = 'search-single';
-          queue = [item];
-          currentIndex = 0;
-          playIndex(0);
-        });
-        if (searchResultsWrap) searchResultsWrap.appendChild(div);
-      });
+
+      // Helper to create sections
+      const createSection = (title, items, type) => {
+        if (!items || !items.length) return;
+
+        const sectionDiv = document.createElement('div');
+        sectionDiv.className = 'section';
+        sectionDiv.style.marginBottom = '2rem';
+
+        const titleEl = document.createElement('h2');
+        titleEl.className = 'section-title';
+        titleEl.textContent = title;
+        sectionDiv.appendChild(titleEl);
+
+        if (type === 'song') {
+          // Vertical list
+          const listDiv = document.createElement('div');
+          listDiv.style.display = 'flex';
+          listDiv.style.flexDirection = 'column';
+          listDiv.style.gap = '0.5rem';
+
+          items.forEach(r => {
+            const item = {
+              id: r.id,
+              title: getTitle(r),
+              artist: getArtist(r),
+              cover: getCover(r),
+              url: null,
+              raw: r
+            };
+            const div = document.createElement('div');
+            div.className = 'search-result-item';
+            div.innerHTML = `
+              <img src="${item.cover}" alt="${item.title}">
+              <div class="search-result-info">
+                <h4>${item.title}</h4>
+                <p>${item.artist}</p>
+              </div>
+            `;
+            div.addEventListener('click', () => {
+              queueSource = 'search-single';
+              queue = [item];
+              currentIndex = 0;
+              playIndex(0);
+            });
+            listDiv.appendChild(div);
+          });
+          sectionDiv.appendChild(listDiv);
+
+        } else {
+          // Horizontal scroll (Albums, Playlists, Artists)
+          const scrollDiv = document.createElement('div');
+          scrollDiv.className = 'horizontal-scroll';
+
+          items.forEach(item => {
+            const card = document.createElement('div');
+            card.className = 'music-card';
+            const cover = getCover(item);
+            const title = item.title || item.name || (type === 'artist' ? item.name : 'Unknown');
+            card.innerHTML = `
+              <img src="${cover}" alt="${escapeHtml(title)}">
+              <span>${escapeHtml(title)}</span>
+            `;
+            card.addEventListener('click', () => {
+              if (type === 'album') playAlbum(item.id);
+              if (type === 'playlist') playPlaylist(item.id);
+              if (type === 'artist') {
+                // For artist, maybe trigger search for that artist or open artist page (not implemented yet)
+                // For now, let's search for the artist's songs
+                searchInput.value = title;
+                handleSearch();
+              }
+            });
+            scrollDiv.appendChild(card);
+          });
+          sectionDiv.appendChild(scrollDiv);
+        }
+
+        if (searchResultsWrap) searchResultsWrap.appendChild(sectionDiv);
+      };
+
+      // Create sections in order
+      createSection('Songs', songs, 'song');
+      createSection('Albums', albums, 'album');
+      createSection('Playlists', playlists, 'playlist');
+      createSection('Artists', artists, 'artist');
+
     } catch (e) {
       console.error('Search failed', e);
       if (searchResultsWrap) searchResultsWrap.innerHTML = `<p style="color:red">Error fetching results</p>`;
@@ -1300,6 +1549,21 @@ document.addEventListener('DOMContentLoaded', () => {
   if (searchInput) searchInput.addEventListener('keydown', e => {
     if (e.key === 'Enter') handleSearch();
   });
+
+  // Load More Button Helper
+  const albumLoadMoreBtn = document.getElementById('album-load-more-btn');
+  if (albumLoadMoreBtn) {
+    albumLoadMoreBtn.addEventListener('click', () => {
+      // Logic for loading more
+      if (currentViewId && currentViewType === 'playlist') {
+        currentViewPage++;
+        albumLoadMoreBtn.textContent = 'Loading...';
+        playPlaylist(currentViewId, currentViewPage).then(() => {
+          albumLoadMoreBtn.textContent = 'Load More Songs';
+        });
+      }
+    });
+  }
 
   // Initial Load
   loadRecentlyFromStorage();
