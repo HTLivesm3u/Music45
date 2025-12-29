@@ -1069,18 +1069,25 @@ document.addEventListener('DOMContentLoaded', () => {
   if (nextBtn) nextBtn.addEventListener('click', nextSong);
 
   // Albums
-  async function loadAlbums() {
+  async function loadAlbums(queries) {
     try {
-      const albumQueries = ['Arijit Singh', 'Pritam', 'Shreya Ghoshal', 'kishor kumar', 'A.R. Rahman'];
+      // Default fallback if no queries provided (backward compatibility)
+      const albumQueries = queries || ['Arijit Singh', 'Pritam', 'Shreya Ghoshal', 'kishor kumar', 'A.R. Rahman'];
       const allAlbums = [];
-      for (const query of albumQueries) {
-        const res = await fetch(`https://music45-api.vercel.app/api/search/albums?query=${encodeURIComponent(query)}`);
+
+      // Randomize queries to show variety if too many
+      const selectedQueries = albumQueries.sort(() => 0.5 - Math.random()).slice(0, 5);
+
+      for (const query of selectedQueries) {
+        const res = await fetch(`https://music45-api.vercel.app/api/search/albums?query=${encodeURIComponent(query)}&limit=20`);
         const data = await res.json();
         if (data?.data?.results) {
-          allAlbums.push(...data.data.results.slice(0, 5));
+          // Take more results per language to show 'more' content
+          allAlbums.push(...data.data.results.slice(0, 10));
         }
       }
-      renderAlbums(allAlbums);
+      // Shuffle results
+      renderAlbums(allAlbums.sort(() => 0.5 - Math.random()));
     } catch (e) {
       console.error('Failed to load albums', e);
     }
@@ -1390,38 +1397,61 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  async function loadMultipleNewReleaseAlbums() {
-    const albumIds = ['56535946', '1055473']; // 🟢 Add more album IDs here
+  async function loadMultipleNewReleaseAlbums(languages) {
     const wrap = document.getElementById('new-releases');
-    if (!wrap) {
-      console.error('new-releases container not found');
-      return;
+    if (!wrap) return;
+    wrap.innerHTML = '';
+
+    // If languages provided, search for them
+    let queries = [];
+    if (languages && languages.length) {
+      queries = languages.map(l => `${l} top hits`);
+    } else {
+      // Fallback
+      queries = ['Hindi Top 50', 'English Top 50'];
     }
-    wrap.innerHTML = ''; // clear old albums
 
-    for (const albumId of albumIds) {
-      const apiUrl = `https://music45-api.vercel.app/api/albums?id=${encodeURIComponent(albumId)}`;
-      try {
-        const resp = await fetch(apiUrl);
-        if (!resp.ok) throw new Error(`Failed fetch album: ${albumId}`);
-        const data = await resp.json();
-        const album = data?.data?.[0] || data?.data;
-        if (!album) continue;
+    try {
+      const allItems = [];
+      const usedIds = new Set();
 
+      // Randomize queries
+      const selectedQueries = queries.sort(() => 0.5 - Math.random()).slice(0, 4);
+
+      for (const q of selectedQueries) {
+        const res = await fetch(`https://music45-api.vercel.app/api/search/playlists?query=${encodeURIComponent(q)}&limit=20`);
+        const data = await res.json();
+        if (data?.data?.results) {
+          const items = data.data.results.slice(0, 10);
+          items.forEach(item => {
+            if (!usedIds.has(item.id)) {
+              usedIds.add(item.id);
+              allItems.push(item);
+            }
+          });
+        }
+      }
+
+      // Shuffle
+      const final = allItems.sort(() => 0.5 - Math.random());
+
+      final.forEach(item => {
         const card = document.createElement('div');
         card.className = 'music-card';
-        const cover = getCover(album);
-        const title = album.name || album.title || 'Unknown Album';
+        const cover = getCover(item);
+        const title = item.name || item.title || 'Unknown Playlist';
 
         card.innerHTML = `
         <img src="${cover}" alt="${escapeHtml(title)}">
         <span>${escapeHtml(title)}</span>
       `;
-        card.addEventListener('click', () => playAlbum(albumId));
+        // Check API for PLAYLIST or ALBUM. Here we fetched playlists.
+        card.addEventListener('click', () => playPlaylist(item.id));
         wrap.appendChild(card);
-      } catch (err) {
-        console.error('Error loading album:', albumId, err);
-      }
+      });
+
+    } catch (e) {
+      console.error('Playlists error', e);
     }
   }
 
@@ -1569,7 +1599,116 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Initial Load
   loadRecentlyFromStorage();
-  loadAlbums();
   refreshQualityButtons();
-  loadMultipleNewReleaseAlbums();
+
+  // Language Selection Logic
+  const AVAILABLE_LANGUAGES = [
+    { name: 'Hindi', native: 'हिंदी', bg: 'linear-gradient(135deg, #FF9933, #FFFFFF, #128807)' }, // Tiranga inspired
+    { name: 'English', native: 'English', bg: 'linear-gradient(135deg, #00247D, #CF142B)' }, // Union Jack inspired
+    { name: 'Punjabi', native: 'ਪੰਜਾਬੀ', bg: 'linear-gradient(135deg, #FFD700, #FF8C00)' },
+    { name: 'Tamil', native: 'தமிழ்', bg: 'linear-gradient(135deg, #FF4B2B, #FF416C)' },
+    { name: 'Telugu', native: 'తెలుగు', bg: 'linear-gradient(135deg, #1D976C, #93F9B9)' },
+    { name: 'Malayalam', native: 'മലയാളം', bg: 'linear-gradient(135deg, #00b09b, #96c93d)' },
+    { name: 'Marathi', native: 'मराठी', bg: 'linear-gradient(135deg, #f83600, #f9d423)' },
+    { name: 'Gujarati', native: 'ગુજરાતી', bg: 'linear-gradient(135deg, #ee0979, #ff6a00)' },
+    { name: 'Bengali', native: 'বাংলা', bg: 'linear-gradient(135deg, #0052D4, #4364F7, #6FB1FC)' },
+    { name: 'Kannada', native: 'ಕನ್ನಡ', bg: 'linear-gradient(135deg, #f7ff00, #db36a4)' },
+    { name: 'Bhojpuri', native: 'भोजपुरी', bg: 'linear-gradient(135deg, #ED213A, #93291E)' },
+    { name: 'Haryanvi', native: 'हरियाणवी', bg: 'linear-gradient(135deg, #11998e, #38ef7d)' },
+    { name: 'Rajasthani', native: 'राजस्थानी', bg: 'linear-gradient(135deg, #8E2DE2, #4A00E0)' },
+    { name: 'Odia', native: 'ଓଡ଼ିଆ', bg: 'linear-gradient(135deg, #00c6ff, #0072ff)' },
+    { name: 'Assamese', native: 'অসমীয়া', bg: 'linear-gradient(135deg, #fc00ff, #00dbde)' },
+    { name: 'Sanskrit', native: 'संस्कृत', bg: 'linear-gradient(135deg, #7028e4, #e5e5be)' }
+  ];
+
+  const selectedLanguageSet = new Set();
+  const langOverlay = document.getElementById('language-selection-overlay');
+  const langGrid = document.getElementById('language-grid');
+  const langNextBtn = document.getElementById('lang-next-btn');
+  const selectedCountEl = document.getElementById('selected-count');
+
+  function updateLangFooter() {
+    const count = selectedLanguageSet.size;
+    if (selectedCountEl) selectedCountEl.textContent = `${count} Selected`;
+    if (langNextBtn) {
+      langNextBtn.disabled = count < 2;
+      langNextBtn.classList.toggle('active', count >= 2);
+    }
+  }
+
+  function renderLanguageGrid() {
+    if (!langGrid) return;
+    langGrid.innerHTML = '';
+    AVAILABLE_LANGUAGES.forEach(lang => {
+      const card = document.createElement('div');
+      card.className = 'lang-card';
+      // Check if already selected (e.g. if we add edit feature later)
+
+      card.innerHTML = `
+            <div class="lang-card-bg" style="background: ${lang.bg}"></div>
+            <div class="lang-card-content">
+                <span class="lang-name">${lang.name}</span>
+                <span class="lang-native">${lang.native}</span>
+            </div>
+            <div class="lang-check"><i data-lucide="check"></i></div>
+          `;
+
+      card.addEventListener('click', () => {
+        if (selectedLanguageSet.has(lang.name)) {
+          selectedLanguageSet.delete(lang.name);
+          card.classList.remove('selected');
+        } else {
+          selectedLanguageSet.add(lang.name);
+          card.classList.add('selected');
+        }
+        updateLangFooter();
+      });
+
+      langGrid.appendChild(card);
+    });
+    refreshIcons(); // For checks
+  }
+
+  function loadContentBasedOnLanguages(langs) {
+    if (!langs || !langs.length) return;
+    // Load Albums for these languages
+    loadAlbums(langs);
+    // Load New Releases
+    loadMultipleNewReleaseAlbums(langs);
+  }
+
+  // Check storage
+  const savedLangsJson = localStorage.getItem('selectedLanguages');
+  if (!savedLangsJson) {
+    // First time user
+    if (langOverlay) {
+      langOverlay.style.display = 'flex';
+      renderLanguageGrid();
+
+      if (langNextBtn) {
+        langNextBtn.addEventListener('click', () => {
+          if (selectedLanguageSet.size < 2) return;
+          const langs = Array.from(selectedLanguageSet);
+          localStorage.setItem('selectedLanguages', JSON.stringify(langs));
+
+          // Hide overlay
+          langOverlay.style.display = 'none';
+
+          // Load content
+          loadContentBasedOnLanguages(langs);
+        });
+      }
+    }
+  } else {
+    // Returning user
+    try {
+      const langs = JSON.parse(savedLangsJson);
+      loadContentBasedOnLanguages(langs);
+    } catch (e) {
+      console.error("Error parsing languages", e);
+      loadAlbums(); // Fallback
+      loadMultipleNewReleaseAlbums();
+    }
+  }
+
 });

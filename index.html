@@ -18,6 +18,21 @@
 
 <body>
   <div class="app">
+    <!-- Language Selection Overlay -->
+    <div id="language-selection-overlay" class="language-selection-overlay" style="display: none;">
+      <div class="lang-header">
+        <h1>What languages do you listen to?</h1>
+        <p>Tap to select 2 or more</p>
+      </div>
+      <div class="language-grid" id="language-grid">
+        <!-- Languages will be injected here -->
+      </div>
+      <div class="lang-footer">
+        <p id="selected-count">0 Selected</p>
+        <button id="lang-next-btn" class="lang-next-btn" disabled>Next</button>
+      </div>
+    </div>
+
     <!-- Header -->
     <div class="header">
       <h1 class="greeting" id="greeting">Good morning</h1>
@@ -94,7 +109,7 @@
 
         <!-- New Releases -->
         <div class="section">
-          <h2 class="section-title">New releases for you</h2>
+          <h2 class="section-title">Recommended Playlists</h2>
           <div class="horizontal-scroll" id="new-releases">
             <!-- Will be filled dynamically -->
           </div>
