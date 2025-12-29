@@ -254,16 +254,36 @@
         // add popstate handler once to handle back/forward navigation
         if (!window.__tabPopstateAdded) {
           window.addEventListener('popstate', (ev) => {
-            const stateTab = (ev.state && ev.state.tab) || location.hash.replace('#', '') || 'home';
+            let stateTab = (ev.state && ev.state.tab) || location.hash.replace('#', '') || 'home';
+            // Sanitize stateTab
+            if (stateTab === 'null' || stateTab === 'undefined') stateTab = 'home';
+
             // update nav active
+            let tabFound = false;
             document.querySelectorAll('.nav-item').forEach(b => {
-              b.classList.toggle('active', b.getAttribute('data-tab') === stateTab);
+              const isMatch = b.getAttribute('data-tab') === stateTab;
+              b.classList.toggle('active', isMatch);
+              if (isMatch) tabFound = true;
             });
+
+            // If tab not found in nav items, default to home
+            if (!tabFound && stateTab !== 'home') {
+              stateTab = 'home';
+              document.querySelectorAll('.nav-item').forEach(b => {
+                b.classList.toggle('active', b.getAttribute('data-tab') === 'home');
+              });
+            }
+
             // show/hide views
             document.querySelectorAll('.tab-view').forEach(t => t.style.display = 'none');
             const id = "tab-" + stateTab;
             const el = document.getElementById(id);
             if (el) el.style.display = 'block';
+            else {
+              // Fallback if even home is missing (unlikely) or some other ID
+              const home = document.getElementById('tab-home');
+              if (home) home.style.display = 'block';
+            }
           });
           window.__tabPopstateAdded = true;
         }

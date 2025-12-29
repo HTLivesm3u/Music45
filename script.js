@@ -1201,7 +1201,8 @@ document.addEventListener('DOMContentLoaded', () => {
             }
           };
         }
-        history.pushState({ albumView: true }, title, '#' + encodeURIComponent(title.replace(/\s+/g, '')));
+        const safeTitle = (title && typeof title === 'string' && title.trim()) ? title : 'Album';
+        history.pushState({ albumView: true }, safeTitle, '#' + encodeURIComponent(safeTitle.replace(/\s+/g, '')));
       }
     } catch (e) {
       console.error('Failed to fetch album songs', e);
@@ -1380,7 +1381,8 @@ document.addEventListener('DOMContentLoaded', () => {
             }
           };
         }
-        history.pushState({ albumView: true }, title, '#' + encodeURIComponent(title.replace(/\s+/g, '')));
+        const safeTitle = (title && typeof title === 'string' && title.trim()) ? title : 'Playlist';
+        history.pushState({ albumView: true }, safeTitle, '#' + encodeURIComponent(safeTitle.replace(/\s+/g, '')));
       }
     } catch (e) {
       console.error('Failed to fetch playlist songs', e);
